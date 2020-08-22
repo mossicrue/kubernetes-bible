@@ -1,4 +1,4 @@
-### REPLICA-SETS CORE CONCEPTS ###
+### REPLICASETS CORE CONCEPTS ###
 
 # RETRIEVE INFO COMMANDS
 # get replicasets basic info from default namespace
@@ -19,7 +19,7 @@ kubectl get replicasets -n <namespace>
 # get one replicasets in yaml file
 kubectl get replicasets <replicaset-name> -o yaml
 
-# get detailed info of a pod
+# get detailed info of a replicaset
 kubectl describe replicasets <replicaset-name>
 
 

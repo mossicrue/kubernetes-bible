@@ -1,0 +1,45 @@
+### DEPLOYMENTS CORE CONCEPTS ###
+
+# RETRIEVE INFO COMMANDS
+# get deployments basic info from default namespace
+kubectl get deployments
+
+# get deployments basic info from all namespaces
+kubectl get deployments -A
+
+# get more deployments info from default namespace
+kubectl get deployments -o wide
+
+# get more deployments info from all namespaces
+kubectl get deployments -A -o wide
+
+# get deployments from a specific namespaces
+kubectl get deployments -n <namespace>
+
+# get one deployments in yaml file
+kubectl get deployments <deployment-name> -o yaml
+
+# get detailed info of a deployment
+kubectl describe deployments <deployment-name>
+
+
+# CREATION COMMANDS
+# create a deployment with definition file
+kubectl create -f <deployment-definition-file.yaml>
+kubectl apply -f <deployment-definition-file.yaml>
+
+# create a deployment without definition file
+kubectl create deployment <deployment-name> --image=<docker-image>
+
+# scale a deployment editing the deploy data without change any definition file
+kubectl edit deployment <deployment-name>
+- change the value in "replicas: "
+
+# scale a deployment with scale commands
+kubectl scale deployment <deployment-name> --replicas=<pods-number>
+
+# scale a deployment editing definition file
+vim <deployment-definition-file.yaml>
+kubectl apply -f deployment-definition-file.yaml>
+
+# in case of editing deployments data like image or scale, seems that no recreation of pods are required
