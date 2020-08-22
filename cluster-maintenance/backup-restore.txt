@@ -1,0 +1,69 @@
+# BACKUP AND RESTORE PROCEDURE WITH ETCD FOLLOWED IN UDEMY CKA COURSE
+# ETCD is a static pod in kubernetes cluster
+
+# get etcd command information
+kubectl -n kube-system describe pods etcd-master
+
+Command:
+  etcd
+  --advertise-client-urls=https://172.17.0.13:2379
+  --cert-file=/etc/kubernetes/pki/etcd/server.crt
+  --client-cert-auth=true
+  --data-dir=/var/lib/etcd
+  --initial-advertise-peer-urls=https://172.17.0.13:2380
+  --initial-cluster=master=https://172.17.0.13:2380
+  --key-file=/etc/kubernetes/pki/etcd/server.key
+  --listen-client-urls=https://127.0.0.1:2379,https://172.17.0.13:2379
+  --listen-metrics-urls=http://127.0.0.1:2381
+  --listen-peer-urls=https://172.17.0.13:2380
+  --name=master
+  --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+  --peer-client-cert-auth=true
+  --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+  --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+  --snapshot-count=10000
+  --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+
+
+# BACKUP PART
+# backup using etcdctl snapshot save command, mandatory options are <cacert file> <cert file> <server key file> and lastly <output file>
+ETCDCTL_API=3 etcdctl snapshot save \
+--cacert="/etc/kubernetes/pki/etcd/ca.crt" \
+--cert="/etc/kubernetes/pki/etcd/server.crt" \
+--key="/etc/kubernetes/pki/etcd/server.key" \
+/tmp/snapshot-pre-boot.db
+
+
+# check if backup command is correct by using member list command
+# output give you also cluster master name and etcd members
+ETCDCTL_API=3 etcdctl member list  \
+--cacert="/etc/kubernetes/pki/etcd/ca.crt" \
+--cert="/etc/kubernetes/pki/etcd/server.crt" \
+--key="/etc/kubernetes/pki/etcd/server.key"
+
+b4952e87a6421aa5, started, master, https://172.17.0.13:2380, https://172.17.0.13:2379
+
+
+
+# RESTORE PART
+# snapshot restore command is like snapshot save command but you need also to specify other options, like data to put the restored etcd folder (--data-dir), initial cluster node, master node name (--name)
+ETCDCTL_API=3 etcdctl snapshot restore \
+--cacert="/etc/kubernetes/pki/etcd/ca.crt" \
+--cert="/etc/kubernetes/pki/etcd/server.crt" \
+--key="/etc/kubernetes/pki/etcd/server.key" \
+--data-dir="/var/lib/etcd-from-backup" \
+--initial-cluster="master=https://127.0.0.1:2380" \
+--name="master" \
+--initial-advertise-peer-urls="https://127.0.0.1:2380" \
+--initial-cluster-token="etcd-cluster-1" \
+/tmp/snapshot-pre-boot.db
+
+# change etcd static pod defitinition file
+vim /etc/kubernetes/manifests/etcd.yaml
+
+# changing or add the command options in the containers specs yaml defitinition
+- --data-dir=/var/lib/etcd-from-backup
+- --initial-cluster-token=etcd-cluster-1
+
+# replace all various volumes that point to /var/lib/etcd to /var/lib/etcd-from-backup
+# usually 2, volumeMounts: with name etcd-data in container data and a volumes: hostPath
