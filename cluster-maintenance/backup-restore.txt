@@ -1,4 +1,4 @@
-# BACKUP AND RESTORE PROCEDURE WITH ETCD FOLLOWED IN UDEMY CKA COURSE
+### BACKUP AND RESTORE PROCEDURE WITH ETCD ###
 # ETCD is a static pod in kubernetes cluster
 
 # get etcd command information

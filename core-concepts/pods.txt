@@ -1,0 +1,48 @@
+### PODS CORE CONCEPTS ###
+
+# RETRIEVE INFO COMMANDS
+# get pods basic info from default namespace
+kubectl get pods
+
+# get pods basic info from all namespaces
+kubectl get pods -A
+
+# get more pods info from default namespace
+kubectl get pods -o wide
+
+# get more pods info from all namespaces
+kubectl get pods -A -o wide
+
+# get pods from a specific namespaces
+kubectl get pods -n <namespace>
+
+# get one pods in yaml file
+kubectl get pods <pod-name> -o yaml
+
+# get detailed info of a pod
+kubectl describe pods <pod-name>
+
+
+# CREATION COMMAND
+# create a pod without definition file, specify name and docker image to use (--image option)
+kubectl run nginx --iamge=nginx
+
+# create a pod using a pod definition file
+kubectl create -f <pod-defintion-file.yaml>
+kubectl apply -f <pod-definition-file.yaml>
+
+# create simple pod definition yaml file
+kubectl run redis --image=redis --dry-run=client -o yaml > pod-definition-file.yaml
+
+
+# MANIPULATION COMMAND
+# edit a running pod if pod definition file is missing
+kubectl edit pod <pod-name>
+### TODO: Check if the "tmp-file" stuff after the edit is necessary also for pods
+
+# edit a running pod with definition file present
+vim <pod-definition-file>
+kubectl apply -f <pod-definition-file>
+
+# delete a pod
+kubectl delete pod <pod-name>
