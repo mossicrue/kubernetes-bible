@@ -1,0 +1,54 @@
+### REPLICA-SETS CORE CONCEPTS ###
+
+# RETRIEVE INFO COMMANDS
+# get replicasets basic info from default namespace
+kubectl get replicasets
+
+# get replicasets basic info from all namespaces
+kubectl get replicasets -A
+
+# get more replicasets info from default namespace
+kubectl get replicasets -o wide
+
+# get more replicasets info from all namespaces
+kubectl get replicasets -A -o wide
+
+# get replicasets from a specific namespaces
+kubectl get replicasets -n <namespace>
+
+# get one replicasets in yaml file
+kubectl get replicasets <replicaset-name> -o yaml
+
+# get detailed info of a pod
+kubectl describe replicasets <replicaset-name>
+
+
+# CREATION COMMANDS
+# create a replicaset (I have seen only from definition file)
+kubectl create -f <replicaset-definition-file.yaml>
+kubectl apply -f <replicaset-definition-file.yaml>
+
+
+# MANIPULATION COMMANDS
+# edit a replicaset without editing definition file
+kubectl edit replicaset <replicaset-name>
+
+# edit a replicaset editing definition file
+vim <replicaset-definition-file.yaml>
+kubectl apply -f <replicaset-definition-file.yaml>
+
+# if something is changed at pod level (eg: change of image, new name, new label), you may refresh the pods running to apply the new configuration by deleting the old ones one by one
+kubectl delete pod <replicaset-pod-name>
+
+# if permitted you can flush all pods with one big commands (working at 2020/08/22)
+kubectl delete pod $(kubectl get pods -o name | grep "<replicaset-name>" | cut -d "/" -f 2)
+
+# scale a replicaset without editing definition file - non persistent way in case of recreation of the replicaset
+kubectl scale replicaset <replicaset-name> --replicas=<number of replica>
+
+# scale a replicaset editing definition file - persistent way in case of recreation of the replicaset
+vim <replicaset-definition-file.yaml>
+kubectl apply -f <replicaset-definition-file.yaml>
+
+# delete a replicaset
+kubectl delete replicaset <replicaset-name>

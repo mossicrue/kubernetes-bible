@@ -28,7 +28,7 @@ kubectl describe pods <pod-name>
 kubectl run nginx --iamge=nginx
 
 # create a pod using a pod definition file
-kubectl create -f <pod-defintion-file.yaml>
+kubectl create -f <pod-definition-file.yaml>
 kubectl apply -f <pod-definition-file.yaml>
 
 # create simple pod definition yaml file
