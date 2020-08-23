@@ -13,7 +13,7 @@ kubectl config get-contexts
 kubectl create namespace <namespace-name>
 
 # create a namespace from definition yaml file
-kubectl create -f <namespace-definition-file.yaml>
+kubectl create -f namespace-definition.yaml
 
 
 # MANIPULATION COMMANDS

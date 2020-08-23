@@ -25,8 +25,8 @@ kubectl describe deployments <deployment-name>
 
 # CREATION COMMANDS
 # create a deployment with definition file
-kubectl create -f <deployment-definition-file.yaml>
-kubectl apply -f <deployment-definition-file.yaml>
+kubectl create -f deployment-definition.yaml
+kubectl apply -f deployment-definition.yaml
 
 # create a deployment without definition file
 kubectl create deployment <deployment-name> --image=<docker-image>
@@ -42,7 +42,7 @@ kubectl edit deployment <deployment-name>
 kubectl scale deployment <deployment-name> --replicas=<pods-number>
 
 # scale a deployment editing definition file
-vim <deployment-definition-file.yaml>
-kubectl apply -f deployment-definition-file.yaml>
+vim deployment-definition.yaml
+kubectl apply -f eployment-definition.yaml
 
 # in case of editing deployments data like image or scale, seems that no recreation of pods are required

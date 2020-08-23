@@ -1,0 +1,24 @@
+### IMPERATIVE COMMANDS ###
+
+# deploy a pod imperatively
+kubectl run nginx-pod --image=nginx:alpine
+
+# create a pod with labels imperatively
+kubectl run nginx-pod --image=nginx:alpine --labels="tier=front-end,app=my-app"
+
+# create a deployment with 4 replicas imperatively
+kubectl create deployment front-end --image=nginx
+kubectl scale deployment front-end --replicas=4
+
+# create a namespace imperatively
+kubectl create namespace <namespace-name>
+
+# create nodeport service imperatively
+kubectl create service nodeport nginx-service --tcp=<port>:<targetPort> --node-port=<nodePort> --dry-run=client -o yaml > svc-definition.yaml
+vim svc-definition.yaml # add selector labels
+kubectl create -f svc-definition.yaml
+
+# create cluster ip service imperatively
+kubectl create service clusterip redis-service --tcp=<port>:<targetPort> --dry-run=client -o yaml > svc-definition.yaml
+vim svc-definition.yaml # add selector labels
+kubectl create -f svc-definition.yaml

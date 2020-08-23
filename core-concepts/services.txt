@@ -52,11 +52,11 @@ kubectl describe services <deployment-name>
 
 
 # CREATION COMMAND
-# create a service without definition file it's possible but more easy using definition file
+# create a service without definition file, see imperative commands
 
 # create a service from definition file
-kubectl create -f <service-definition-file.yaml>
-kubectl apply -f <service-defintion-file.yaml>
+kubectl create -f svc-definition.yaml
+kubectl apply -f svc-definition.yaml
 
 
 # MANIPULATION COMMAND

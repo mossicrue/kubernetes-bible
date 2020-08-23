@@ -25,8 +25,8 @@ kubectl describe replicasets <replicaset-name>
 
 # CREATION COMMANDS
 # create a replicaset (I have seen only from definition file)
-kubectl create -f <replicaset-definition-file.yaml>
-kubectl apply -f <replicaset-definition-file.yaml>
+kubectl create -f replicaset-definition.yaml
+kubectl apply -f replicaset-definition.yaml
 
 
 # MANIPULATION COMMANDS
@@ -34,8 +34,8 @@ kubectl apply -f <replicaset-definition-file.yaml>
 kubectl edit replicaset <replicaset-name>
 
 # edit a replicaset editing definition file
-vim <replicaset-definition-file.yaml>
-kubectl apply -f <replicaset-definition-file.yaml>
+vim replicaset-definition.yaml
+kubectl apply -f replicaset-definition.yaml
 
 # if something is changed at pod level (eg: change of image, new name, new label), you may refresh the pods running to apply the new configuration by deleting the old ones one by one
 kubectl delete pod <replicaset-pod-name>
@@ -47,8 +47,8 @@ kubectl delete pod $(kubectl get pods -o name | grep "<replicaset-name>" | cut -
 kubectl scale replicaset <replicaset-name> --replicas=<number of replica>
 
 # scale a replicaset editing definition file - persistent way in case of recreation of the replicaset
-vim <replicaset-definition-file.yaml>
-kubectl apply -f <replicaset-definition-file.yaml>
+vim replicaset-definition.yaml
+kubectl apply -f replicaset-definition.yaml
 
 # delete a replicaset
 kubectl delete replicaset <replicaset-name>

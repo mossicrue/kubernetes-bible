@@ -28,8 +28,8 @@ kubectl describe pods <pod-name>
 kubectl run nginx --iamge=nginx
 
 # create a pod using a pod definition file
-kubectl create -f <pod-definition-file.yaml>
-kubectl apply -f <pod-definition-file.yaml>
+kubectl create -f pod-definition.yaml
+kubectl apply -f pod-definition.yaml
 
 # create simple pod definition yaml file
 kubectl run redis --image=redis --dry-run=client -o yaml > pod-definition-file.yaml
