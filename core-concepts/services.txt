@@ -14,6 +14,13 @@ Need 3 port to works
 NodePort: 30008 -> it's the port on the node itself which we use to access the web server externally, has a range from 30000 to 32767
 
 
+## CLUSTER IP
+Need 2 port to works
+
+TargetPort: 80 -> it's the port where the backend is exposed (pods to cluster)
+      Port: 80 -> it's the port where the service is exposed (service)
+
+
 # RETRIEVE INFO COMMANDS
 # get services basic info from default namespace
 kubectl get services

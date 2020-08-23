@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 80
+      port: 80
+  # selector is a list of labels used to identify the pods that will associated to this service
+  selector:
+    app: my-app
+    type: front-end
