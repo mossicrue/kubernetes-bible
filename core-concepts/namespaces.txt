@@ -1,0 +1,34 @@
+### NAMESPACES CORE CONCEPTS ###
+
+# RETRIEVE INFO COMMANDS
+# get all namespace
+kubectl get namespaces
+
+# get the current namespace I work
+kubectl config get-contexts
+
+
+# CREATION COMMANDS
+# create a namespace
+kubectl create namespace <namespace-name>
+
+# create a namespace from definition yaml file
+kubectl create -f <namespace-definition-file.yaml>
+
+
+# MANIPULATION COMMANDS
+# switch namespace, default is "default", kubernetes system namespace is "kube-system" (via kubeadm)
+kubectl config set-context $(kubectl config current-context) --namespace=<namespace-name>
+kubectl config set-context --current --namespace=<namespace-name>
+
+# delete a namespace
+kubectl delete namespaces <namespace-name>
+
+
+# DNS RESOLUTUIN ACROSS NAMESPACES
+db-service.dev.svc.cluster.local
+
+   db-service: name of the service that expose pods
+          dev: namespace name
+          svc: service
+cluster.local: standard domain

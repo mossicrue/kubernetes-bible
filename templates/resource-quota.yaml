@@ -1,0 +1,5 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota-name
+# namespace: namespace-name
