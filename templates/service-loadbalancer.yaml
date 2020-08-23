@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-servivce
+spec:
+  type: LoadBalancer
+  ports:
+    - targetPort: 80
+      port: 80
+      nodePort: 30008
+  # selector is a list of labels used to identify the pods that will associated to this service
+  selector:
+    app: my-app
+    type: front-end
