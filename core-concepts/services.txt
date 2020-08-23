@@ -1,0 +1,48 @@
+### SERVICES CORE CONCEPTS ###
+
+# TYPE OF SERVICES
+- NodePort: this service makes an internal POD accessible on a port on the Node
+- ClusterIP: the service create a virtual IP inside the cluster to enable communications between difference services such as a set of front-end servers to a set of back-end servers
+- LoadBalancer: it provides a load balancing for our application in supported cloud provider (Google Cloud Platforms, Amazon AWS)
+
+
+## NODE PORT
+Need 3 port to works
+
+ TargetPort: 80 -> it's the port of the Pod where the webserver is running
+       Port: 80 -> it's the port on the service itself,
+NodePort: 30008 -> it's the port on the node itself which we use to access the web server externally, has a range from 30000 to 32767
+
+
+# RETRIEVE INFO COMMANDS
+# get services basic info from default namespace
+kubectl get services
+
+# get services basic info from all namespaces
+kubectl get services -A
+
+# get more services info from default namespace
+kubectl get services -o wide
+
+# get more services info from all namespaces
+kubectl get services -A -o wide
+
+# get services from a specific namespaces
+kubectl get services -n <namespace>
+
+# get one services in yaml file
+kubectl get services <deployment-name> -o yaml
+
+# get detailed info of a deployment
+kubectl describe services <deployment-name>
+
+
+# CREATION COMMAND
+# create a service without definition file
+
+# create a service from definition file
+kubectl create -f <service-definition-file.yaml>
+kubectl apply -f <service-defintion-file.yaml>
+
+# create a simple service defintion file
+kubectl create deployment <deployment-name> --image=<docker-image> --dry-run=client -o yaml

@@ -31,6 +31,9 @@ kubectl apply -f <deployment-definition-file.yaml>
 # create a deployment without definition file
 kubectl create deployment <deployment-name> --image=<docker-image>
 
+# create simple deployment definition yaml file
+kubectl create deployment <deployment-name> --image=<docker-image> --dry-run=client -o yaml
+
 # scale a deployment editing the deploy data without change any definition file
 kubectl edit deployment <deployment-name>
 - change the value in "replicas: "
