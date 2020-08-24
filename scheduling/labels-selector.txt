@@ -1,0 +1,56 @@
+### LABELS AND SELECTOR ###
+
+## LABELS
+# Used in the various definition file to match up which pod are to be managed by a deployment or a services
+# The selector object in spec property of a replicaset must have the same labels and values in the template metadata property of the pods
+
+
+## SELECTOR
+# Show pod that have to match a specific label
+kubectl get pods --selector tier=db
+
+# Show pod that have to match more specific labels
+kubectl get pods --selector tier=db,env=dev
+
+# Show all the objects that have a specific label
+kubectl get all --selector env=prod
+
+
+## ANNOTATIONS
+# Record other details relatives to the defining object.
+# The informations stored may be tool details like the name, the build version or contact details.
+# The data are stored like the labels, in the metadata property in this way:
+
+metadata:
+  labels:
+    name: app
+  annotations:
+    version: 1.2.4
+    contact: john.doe@example.org
+
+# EXAMPLE OF DEPLOYMENT WITH ANNOTATIONS AND LABEL SELECTOR
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-webapp
+  labels:
+    app: simple-webapp
+    tier: front-end
+  annotations:
+    buildVersion: 1.2.4
+    contact: john.doe@example.org
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      name: front-end
+  template:
+    metadata:
+      labels:
+        app: simple-webapp
+        tier: front-end
+    spec:
+      containers:
+      - name: httpd
+        image: httpd
