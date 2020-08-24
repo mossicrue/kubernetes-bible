@@ -4,6 +4,13 @@
 # Used in the various definition file to match up which pod are to be managed by a deployment or a services
 # The selector object in spec property of a replicaset must have the same labels and values in the template metadata property of the pods
 
+# Add a label to an object
+kubectl label nodes <node-name> <label-key>=<label-value>
+kubectl label nodes node01 app=simpleapp
+
+# Delete a label of an object, for example app label
+kubectl label <object> <object-name> <label>-
+kubectl label pods nginx app-
 
 ## SELECTOR
 # Show pod that have to match a specific label
