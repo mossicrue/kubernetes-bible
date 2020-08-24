@@ -1,0 +1,18 @@
+### NODE SELECTORS ###
+
+# Used to specify a set of nodes in which deploy a pods
+# Works similiar to the matchLabels of replicasets and deployments
+
+# HOW TO DEPLOY A POD WITH NODESELECTOR
+# Add a label to a nodes
+kubectl label nodes app=myapp
+
+# Add nodeSelector property to pod definition yaml file under the spec macro-property, below an example:
+spec:
+  nodeSelector:
+    app: myapp
+  containers:
+  - image: nginx
+    name: nginx
+
+# Deploy the pod from the definition file

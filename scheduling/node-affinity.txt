@@ -1,0 +1,56 @@
+### NODE AFFINITY ###
+
+# Ensure that pods are hosted in particular pods, eg: huge pod on high performance nodes
+# Affinity is a more powerful version of node-selectors
+
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: size
+            operator: In
+            values:
+            - large
+
+
+# Available operators are In, NotIn, Exists
+# values is an array, we can specify more then one value
+
+# In Operator, deploy pods where size values is large (or other values if specified)
+- matchExpressions:
+  - key: size
+    operator: In
+    values:
+    - large
+
+# NotIn Operator, deploy pods where color values is nor blue and red
+- matchExpressions:
+  - key: color
+    operator: NotIn
+    values:
+    - blue
+    - red
+
+# Exists Operator, check only if the labels exists, does not compare values
+- matchExpressions:
+  - key: size
+    operator: Exists
+
+
+# TYPE OF NODE AFFINITY
+# What happen if someone change labels on a node with affinity pods deployed? Will the pod continue to stay on the nodes? The answer is in the type of node affinity!
+
+# Currently there are 2 type of node affinity, the 3rd is still in development
+- requiredDuringSchedulingIgnoredDuringExecution
+- preferredDuringSchedulingIgnoredDuringExecution
+- requiredDuringSchedulingRequiredDuringExecution
+
+# During Scheduling
+- requiredDuringScheduling: if there isn't any matching nodes, the scheduler will not schedule the pod
+- preferredDuringScheduling: if a there ins't any matching nodes, the scheduler will ignore affinity rules and place the pod on any available node
+
+# During Execution
+- IgnoredDuringExecution: any change to node affinity will not impact already scheduled pods
+- RequiredDuringExecution: any change to node affinity will impact on running pods, removing or deleting it
