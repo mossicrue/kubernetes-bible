@@ -1,0 +1,41 @@
+### TAINTS AND TOLERATIONS ###
+
+# Used to avoid non-tolerants pods to be scheduled on a tainted node
+# First we add a taint to the node and then a toleration to the POD that can be scheduled on the tainted node
+# Tolerant pod can also be scheduled in other node
+
+
+## TAINTS
+
+# Taint a node
+kubectl taint nodes <node-name> key=value:taint-effect
+
+# Taint Effect
+# If we try to schedule a non-tolerant pod on a tainted node, the node will be affected by the defined taint-effect
+- NoSchedule: the pod will not be scheduled on the node, existing pods will remain on the node
+- PrefereNoSchedule: the system will try to avoid placing a pod on the node, but that is not guaranteed
+- NoExecute: new pods will not be scheduled on the node and existing one will be moved to other nodes
+
+# Example of add a taint
+kubectl taint nodes node01 app=blue:NoSchedule
+
+# Update a taint
+kubectl taint node node01 app=red:NoSchedule --overwrite
+
+# Remove a taint
+kubectl taint node <node-name> key-
+kubectl taint node node01 app-
+
+
+## TOLERATIONS
+
+# To add a tolerations on a pod, add the tolerations property under the metadata key, like the example below
+# all the value in the tolerations key must be written between quotes
+metadata:
+  tolerations:
+  - key: "app"
+    operator: "Equal"
+    value: "blue"
+    effect: "NoSchedule"
+
+# tolerants operators
