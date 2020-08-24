@@ -1,0 +1,13 @@
+### MANUAL SCHEDULING ###
+
+# To schedule a pod in a defined node, set the nodeName property in spec property of pod definition yaml file
+spec:
+  nodeName: node01
+  container:
+    - name: nginx
+      image: nginx
+
+# If POD is already created we can bind the POD to a node with a binding request
+curl --header "Content-Type:application/json" --request POST \
+--data '$( ruby -r json -r yaml -e "puts YAML.load_file('pod-binding.yml').to_json"' \
+http://$SERVER/api/v1/namespaces/default/pods/$PODNAME/binding
