@@ -1,0 +1,16 @@
+### MONITORING CLUSTER COMPONENTS ###
+
+# Kubernetes doesn't come with a full featured monitoring solutions, but there are a lot of solutions based on metrics server products like Prometheus, Dynatrace, ElastikStack
+# Metrics server retrieves metrics data from each of the kubernetes nodes and pods and store them in-memory, not in disk, no hystorical performance data, for this feature it's convinient to use products like Prometheus
+
+# Kubelet has a component called cAdvisor or Container Advisor. It is responsible to retrieve metrics data from pods and exposing it trough kubelet api to be readed from the Metrics Server
+
+# deploy a metrics server
+git clone https://github.com/kubernetes-incubator/metrics-server.git
+kubectl create -f deploy/1.8+/
+
+# See node usage for CPU, CPU %, memory and memory %
+kubectl top node
+
+# See pods usage for CPU, CPU %, memory and mempry %
+kubectl top pod

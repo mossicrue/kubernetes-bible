@@ -7,7 +7,7 @@
 
 # Default POD resource requirement
 - CPU: 0.5
-- RAM: 256Mi
+- memory: 256Mi
 
 # To change the default resources requests of a whole namespace use the LimitRange objects for containers
 # Example of default cpu defaults request for all pods in a namespace
@@ -41,7 +41,7 @@ spec:
 
 
 # Change the minimum requirements of resources of a pods by adding resources property on spec macro-property
-# In the example below we set as minimum requirements 1 cpu and 1 Gibibyte of RAM for the pod
+# In the example below we set as minimum requirements 1 cpu and 1 Gibibyte of memory for the pod
 spec:
   resources:
     requests:
@@ -77,4 +77,4 @@ spec:
 
 # What happen in case of resoruce overgrow
 # CPU: kubernetes cap the cpu and the containers cannot use more cpu over its limit
-# RAM: A pod can consume more memory than its limit. If the memory consume it's constantly over the limit, the pod will be terminated
+# memory: A pod can consume more memory than its limit. If the memory consume it's constantly over the limit, the pod will be terminated
