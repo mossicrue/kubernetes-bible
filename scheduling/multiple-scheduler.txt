@@ -52,6 +52,10 @@ spec:
 kubectl logs my-custom-scheduler --name-space=kube-system
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9e68ebbb2bf9570147010d9574040f25512dd004
 # IN DEPTH DEPLOY A NEW SCHEDULER - EXERCISE
 - copy the scheduler definition yaml file from the static pod path and start editing the file
 * set --leader-elect options to false in spec -> containers -> command
