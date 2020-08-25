@@ -1,0 +1,16 @@
+### TAINTS AND TOLERATIONS VS NODE AFFINITY ###
+
+# Here a little example on how tants tolerations and node affinity can work togheter
+# 5 pods: 1 blue, 1 green, 1 red and 2 generic
+# 5 nodes: 1 blue, 1 green, 1 red and 2 generic
+# Aim is to deploy blue pod on blue node, green pod on green node, red pod on red node and the generic pod on the generic node
+
+# Solving using only taint and tolerations:
+- A colored pods may be scheduled on a generic nodes
+
+# Solving using only node affinity:
+- A generic pods may be scheduled on a colored nodes
+
+# Combinations of taints and affinity:
+- Taints prevents generic pods to be scheduled on colored nodes
+- Affinity prevents colored pods to be scheduled on generic nodes
