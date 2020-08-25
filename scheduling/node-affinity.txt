@@ -53,4 +53,4 @@ spec:
 
 # During Execution
 - IgnoredDuringExecution: any change to node affinity will not impact already scheduled pods
-- RequiredDuringExecution: any change to node affinity will impact on running pods, removing or deleting it
+- RequiredDuringExecution: any change to node affinity will impact on running pods, evicting it from the nodes or deleting it
