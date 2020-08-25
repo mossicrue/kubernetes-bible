@@ -1,0 +1,17 @@
+### DAEMON SETS ###
+
+# Used to ensure that one copy of a pod is running on each node of a cluster
+# Every time a node is added to the cluster a pod of the daemon sets is automatically scheduled on it
+# Every time a node is removed to the cluster the pod of the daemon sets is automatically deleted
+
+# Daemon sets are good for logging agent or monitoring agents
+# An example of internal daemon sets of kubernetes is kube-proxy, that is deployed on all nodes in the cluster
+
+# List all daemonset
+kubectl get daemonsets
+
+# Create a daemonset
+kubectl create -f daemonset-definition.yaml
+
+# Delete a daemonset
+kubectl delete daemonset <daemonset-name>
