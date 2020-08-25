@@ -1,0 +1,60 @@
+### MULTIPLE SCHEDULER ###
+
+# DEPLOY A CUSTOM SCHEDULER
+
+# Deploy with binaries
+- First download the scheduler binary
+wget https //storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler
+
+# kube-scheduler.service
+ExecStart=/usr/local/bin/kube-scheduler \
+  --config=/etc/kubernetes/config/kube-scheduler.yaml \
+  --scheduler-name=default-scheduler
+
+- Edit the service file by changing the service file, --scheduler-name options value must be unique
+# my-custom-scheduler.service
+ExecStart=/usr/local/bin/kube-scheduler \
+  --config:/etc/kubernetes/config/kube—scheduler.yaml \
+  --scheduler-name: my-custom-scheduler
+
+
+# Deploy with kubeadm
+# Deploy the scheduler as a static pod, its filepath is /etc/kubernetes/manifests/kube-scheduler.yaml
+- copy the scheduler definition yaml file
+- add the --scheduler-name option with a unique new scheduler name
+- change the --leader-elect option with the correct value
+- add the --lock-object-name option with a unique value
+
+# --leader-elect option
+# In a case which there are multiple copy of the same scheduler (eg: HA environment with 2 or more master nodes) only one scheduler must be active at a time.
+# Set leader-elect option to false in case you have only one master nodes.
+
+# --lock-object-name
+# In case of multiple masters we must pass the --lock-object-name options
+# Differenciate the new custom scheduler from the default during leader election process
+
+# create the pod with kubectl create command and ensure the pod is in running state
+
+
+# DEPLOY A POD USING A CUSTOM SCHEDULER
+# In pod definition file, under the spec macro-property, add the key schedulerName and the scheduler name as value, example below
+
+spec:
+  containers:
+    - image: nginx
+      name: nginx
+  schedulerName: my-custom-scheduler
+
+# Create the pods with the kubectl create -f command, if scheduler is not well configured the pod will remain in pending state, otherwise, if everything is good, the pod will be in running state
+
+
+# VIEW SCHEDULER LOGS
+kubectl logs my-custom-scheduler --name-space=kube-system
+
+
+# IN DEPTH DEPLOY A NEW SCHEDULER - EXERCISE
+- copy the scheduler definition yaml file from the static pod path and start editing the file
+* set --leader-elect options to false in spec -> containers -> command
+* add --scheduler-name=my-scheduler in spec -> containers -> command
+* change spec -> containers -> name value from kube-scheduler to my-scheduler
+* change metadata -> name value to my-scheduler
