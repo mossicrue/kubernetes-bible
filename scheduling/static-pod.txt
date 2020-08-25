@@ -1,0 +1,36 @@
+### STATIC POD ###
+
+# Kubelet component can manage the node indipendently
+# Kubelet read periodically the pod definition files present on a specific path and create the pods on the hosts
+# The static pod path is, by default, /etc/kubernetes/manifest
+# If a pods crash, kubelet attempts to restart the pod, ensuring that they stays alive
+# If a change is make on a file in that directory, the kubelet will recreate the pods
+# If a file is removed from that directory, the kubelet will delete the pods associated automatically
+# Kubelet can create only static pod, no static deploy, or static service, ecc
+
+# Check kubelet process for retrieving process options if you can't find the kubelet services
+ps -aux | grep kubelet
+
+# Change the path of static pod directory
+
+# 1 - Edit the kubelet.services
+# In the ExecStart search for the --pod-manifest options and change that value
+# Restart the kubelet service
+
+# 2 - Providing a path to a config options
+# In the ExecStart of the kubelet.service search for the --config= option
+# The value of that options, for example kubeconfig.yaml will be the path to kubelet configuration file
+# In the configuration file search for the staticPodFile key and change its value
+# Restart the kunelet service
+
+# Static pod can't be deleted or updated by the usual way from the kubeapi server, only by acting on the yaml file in the node is scheduled
+# In the kubectl get pods output a static pod can be recognized because its name has appended the nodename in which is deployed
+
+# EG deploy a static pod name "static-nginx" on node01, in kubectl get pods output I will see the name "static-nginx-node01"
+
+# USE CASE
+# Deploy the control panel of kubernetes itself as static pod
+- Start by installing kubelet on the nodes
+- Create the various component definition file (etcd, apiserver, controller-manager, ecc)
+- Place the files in the static pods directory
+- Let kubelet takes care of the pod deploy on the nodes
