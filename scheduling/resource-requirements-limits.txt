@@ -1,0 +1,80 @@
+### RESOURCE REQUIREMENTS AND LIMITS ###
+
+# Every pod use a certain quantity of resources like CPU, Memory and Storage
+# Scheduler takes into considerations the resources required by a Pod and the ones available on the nodes
+# If a node have insufficient free resource the scheduler avoid to schedule a pod in that node, choosing one with sufficient free resources
+# If no resources are available on all the nodes, the scheduler will put the pod on pending state waiting for resource to be freed
+
+# Default POD resource requirement
+- CPU: 0.5
+- RAM: 256Mi
+
+# To change the default resources requests of a whole namespace use the LimitRange objects for containers
+# Example of default cpu defaults request for all pods in a namespace
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-limit-range
+spec:
+  limits:
+  - default:
+      cpu: 1
+    defaultRequest:
+      cpu: 0.5
+    type: Container
+
+
+# Example of default memory defaults request for all pods in a namespace
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mem-limit-range
+spec:
+  limits:
+  - default:
+      memory: 512Mi
+    defaultRequest:
+      memory: 256Mi
+    type: Container
+
+
+# Change the minimum requirements of resources of a pods by adding resources property on spec macro-property
+# In the example below we set as minimum requirements 1 cpu and 1 Gibibyte of RAM for the pod
+spec:
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: 1
+  containers:
+  - image: nginx
+    name: nginx
+
+# A CONTAINER by default can consumes as much resoruces as it requests, soffocating native processes on the node or of the other container
+# To avoid it, we can set a limit to the resources to use, by default KUBERNETES set pods limit to 1vCPU and 512Mi
+# To change the limits of resources of a pods, add the limit property on the resources key of spec macro-property of a pod, example below
+
+spec:
+  resources:
+    limits:
+      memory: "2Gi"
+      cpu: 2
+  containers:
+  - image: nginx
+    name: nginx
+
+# Full example of resources property is:
+spec:
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: 1
+    limits:
+      memory: "2Gi"
+      cpu: 2
+
+
+# What happen in case of resoruce overgrow
+# CPU: kubernetes cap the cpu and the containers cannot use more cpu over its limit
+# RAM: A pod can consume more memory than its limit. If the memory consume it's constantly over the limit, the pod will be terminated
