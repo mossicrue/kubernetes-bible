@@ -1,0 +1,10 @@
+### MANAGING APPLICATION LOGS ###
+
+# See the log of a pods
+kubectl logs event-simulator-pod
+
+# See the log of a pods like tail -f
+kubectl logs -f event-simulator-pod
+
+# In case of a pods with multiple containers, you must specify which container you want to read logs
+kubectl logs -f event-simulator-pod event-simulator-container
