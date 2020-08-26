@@ -1,0 +1,54 @@
+### APPLICATION COMMANDS ###
+
+# Commands and arguments in Docker
+
+# Issue a command like "docker run ubuntu" will run an instance of ubuntu and exit immediately
+# "docker ps" will not show any process
+# "docker ps -a" will show the process like Exited
+
+# In dockerfile there is the istruction called CMD that define the command that will be issued when container it's started
+# In ubuntu dockerfile the CMD istruction is "bash" that will exit if there isn't any istruction to be performed
+
+## Specify a different command to be issued when a container starts
+# append the command to "docker run" overriding the default command specified in the image
+docker run ubuntu sleep 5 -> will run the command sleep 5 instead of bash
+
+# create a new image from the base one and adding the CMD instruction
+FROM Ubuntu
+CMD sleep 5
+docker build -t ubuntu-sleeper ubuntu-sleeper.dockerfile
+docker run ubuntu-sleeper
+
+# Different way to specify CMD instruction
+- shell form
+CMD command param1
+CMD sleep 5
+
+- json form, first element must be the executable
+CMD ["command", "param1"]
+CMD ["sleep", "5"] <- right way
+CMD ["sleep 5"]    <- wrong way, command and parameter must be separated
+
+
+## How to change the number to seconds of sleep? Currently is hardcoded to 5
+# append the command to "docker run" like before running
+docker run ubuntu-sleeper sleep 10
+# this is not what we want, as we image to run a 10 seconds sleep passing only the number of seconds of sleep
+docker run ubuntu-sleeper 10
+# we must use the instruction ENTRYPOINT changing the ubuntu-sleeper image to that one
+FROM Ubuntu
+ENTRYPOINT ["sleep"]
+
+# ENTRYPOINT is the command that will be running when the container starts
+# Whatever you specify in the command line would be appended in the entrypoint command, making "docker run ubuntu-sleeper 10" running "sleep 10"
+# If we run "docker run ubunut-sleeper" we will get error because we run the "sleep" command without any arguments
+# To avoid this we must change our ubuntu-sleeper image to that final versions
+FROM Ubuntu
+ENTRYPOINT ["sleep"]
+CMD ["5"]
+
+# if no passing any arguments in the docker run, the command will be builded from ENTRYPOINT + CMD, making sleep 5
+# if we pass one arguments, like 10, the CMD value will be overwrited with 10, and appended to the ENTRYPOINT, generating the command "sleep 10"
+
+# To override the entrypoint command we can use the --entrypoint option in the docker run command
+docker run --entry-point sleep2.0 ubuntu-sleeper 10
