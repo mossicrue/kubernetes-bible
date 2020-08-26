@@ -1,2 +1,4 @@
 # kubernetes-bible
-Just notes and stuff for kubernetes
+
+Just notes and stuff for kubernetes written during the many course I made for learning it.
+Divided in macro category
