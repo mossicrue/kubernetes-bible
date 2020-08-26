@@ -1,0 +1,67 @@
+### ROLLING UPDATES AND ROLLBACK ###
+
+# A new deploy create a new roll-out, a new roll-out create a new deployment revision (eg Revision 1)
+# When the application is upgraded (a container version is updated to a new one) a new roll-out is triggered and create a new deployment revision (eg Revision 2)
+# This keep track of the canges made and enable to rollback if necessary
+
+## ROLLUOT COMMANDS
+# Get the status of the rollout of a deployment
+kubectl rollout status deployment/<deploylment-name>
+
+# Show history and revision of deployments
+kubectl rollout history deployment/<deployment-name>
+
+# Roll back to a previous deployment revision
+kubectl rollout undo deployment/<deployment-name>
+
+
+## DEPLOYMENT STRATEGY
+# There are 2 deployment strategy, example is a deployment with 5 pods
+- Recreate Strategy
+- Rolling Update Strategy
+
+# Recreate Strategy
+# First destroys the 5 running instances and then deploy 5 new instances of the new application version
+# NB: During the period after all the older versions pods are down and before any new newer versions pods are up THE APPLICATION IS DOWN AND UNACCESSIBLE TO USE
+
+# Rolling Update Strategy
+# The older versions pods aren't all of them destroyed at once, instead we take down the older version pods and bring up the newer version pods one by one, THE APPLICATION NEVER GOES DOWN
+# Default value of update in kubernetes is "Rolling Update"
+
+# Check the Update Strategy on a running deploy
+kubectl get deployments <deploy-name> | grep  "^StrategyType"
+
+# Edit a deployment strategy from rolling to recreate on a running deploy without definition file
+kubectl edit deployment frontend
+- change spec -> strategy property following below example
+- remove the f.strategy and f.rollingUpdate() raws from the metadata macro-property
+- remove the strategy and rollingUpdate property from specs macro-property
+
+# Deployment definition file for recreate strategy
+spec:
+  strategy:
+    type: Recreate
+
+# Deployment definition file for rolling update strategy
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+
+
+## HOW TO UPDATE A DEPLOYMENT
+# First of all, update a deployment means that we have updated one or more of this component:
+- application versions
+- docker container versions
+- update the labels
+- updating the number of replica
+- etc
+
+# After the update of the deployment definition file, apply the update by:
+kubectl apply -f <updated-deployment-definition.yaml>
+
+# Update the container image version of the deployment imperatively
+kubectl set image deployment/<deployment-name> <container-name>=<new-image>
+kubectl set image deploymennt
