@@ -1,0 +1,48 @@
+### APPLICATION POD - COMMANDS AND ARGUMENTS ###
+
+# We use the same container image used for container commands: ubuntu-sleeper
+# To use it like a pod in kubernetes we have to create its pod defninition file
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+    - name: ubuntu-sleeper
+      image: ubuntu-sleeper
+
+# With this pod definition file the pods will sleep only for 5 seconds (default entrypoint and command)
+
+# How to set a custom sleep time, for example 10 seconds?
+# We add the args property passing the arguments value in form of array like example below
+spec:
+  containers:
+    - name: ubuntu-sleeper
+      image: ubuntu-sleeper
+      args: ["10"]
+
+# How to set a custom entrypoint on the pods?
+# We add the commands property passing the executable commands in form of array like example below
+spec:
+  containers:
+    - name: ubuntu-sleeper
+      image: ubuntu-sleeper
+      commands: ["sleep2.0"]
+
+# Complete example of pods with custom commands and args property
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+    - name: ubuntu-sleeper
+      image: ubuntu-sleeper
+      commands: ["sleep2.0"]
+      args: ["10"]
+
+# commands and args value can be wrote also like yaml arrays like
+      commands:
+      - sleep2.0
+      - 10
