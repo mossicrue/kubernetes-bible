@@ -1,0 +1,35 @@
+### ENVIRONMENT VARIABLES IN KUBERNETES ###
+
+# To add an environment variable to a container of a pod just add the env property under the containers property entry, example below
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    env:
+      - name: APP_COLOR
+        value: pink
+
+## Env value type in yaml definition file:
+# Plain key-value (example above)
+    env:
+    - name: APP_COLOR
+      value: pink
+
+# ConfigMap
+    env:
+    - name: APP_COLOR
+      valueFrom:
+        configMapKeyRef:
+
+# Secrets
+    env:
+    - name: APP_COLOR
+      valueFrom:
+        secretKeyRef:
