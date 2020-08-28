@@ -1,1 +1,30 @@
-### MULTI CONTAINER POD
+### MULTI CONTAINER POD ###
+
+# Sometimes we need that 2 services works togheter, such as a webserver and a logging services
+# We need one agent instance for each web server instance paired togheter
+
+# Containers in a multi-container pod share the same lifecycle
+# They are created and destroyed togheter
+# They share the same networks and storage
+# No volume sharing or services in order to communicate between the containers
+# In pod definition file, the spec -> containers property accept an array, so we can add all the container we want
+
+# Example of a multi-containers pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+  labels:
+    name: simple-webapp
+spec:
+  containers:
+    - name: simple-webapp
+      image: simple-webapp
+      ports:
+        - containerPort: 8080
+    - name: log-agent
+      image: log-agent
+
+# Enter in a container of a pod and launch command
+kubectl exec -it <pod-name> [-c <container-name>] <command>
+kubectl -n elastic-stack exec -it app cat /log/app.log

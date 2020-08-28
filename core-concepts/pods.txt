@@ -44,5 +44,8 @@ kubectl edit pod <pod-name>
 vim <pod-definition-file>
 kubectl apply -f <pod-definition-file>
 
+# Enter in a container of a pod and launch command
+kubectl exec -it <pod-name> [-c <container-name>] <command>
+
 # delete a pod
 kubectl delete pod <pod-name>
