@@ -34,6 +34,7 @@ kubectl create configmap app-config --from-literal=APP_COLOR=blue
 # --from-literal options can be used multiple times for a command but can create entropy, use file instead
 kubectl create configmap --from-file=app-config.properties
 
+# --from-file options file has to be filled with environment data in the same way we do for data property in definition yaml
 
 # Create a config map declaratively
 kubectl create -f configmap-definition.yaml
