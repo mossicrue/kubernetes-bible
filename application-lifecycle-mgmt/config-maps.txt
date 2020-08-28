@@ -1,0 +1,56 @@
+### CONFIG MAPS ###
+
+# When you have a lot of pod, it becomes difficult to manage all the environment data
+# We have to move the environment data out of the pods and store them in ConfigMaps
+
+# Example of injecting all the environment data from ConfigMap:
+  envFrom:
+  - configMapRef:
+      name: app-config
+
+# Example of injecting only one environment data from ConfigMap:
+  env:
+  - name: APP_COLOR
+    valueFrom:
+      configMapKeyRef:
+        name: app-config
+        key: APP_COLOR
+
+# Example of injecting environment data as a file in a volume
+  volumes:
+  - name: app-config-volume
+    configMap:
+      name: app-config
+
+
+## How to create a ConfigMap
+- Create the ConfigMap
+- Inject the ConfigMap to the pod
+
+# Create a config map imperatively
+kubectl create configmap <configmap-name> --from-literal=<key>=<value>
+kubectl create configmap app-config --from-literal=APP_COLOR=blue
+
+# --from-literal options can be used multiple times for a command but can create entropy, use file instead
+kubectl create configmap --from-file=app-config.properties
+
+
+# Create a config map declaratively
+kubectl create -f configmap-definition.yaml
+
+# ConfigMapTemplate
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_COLOR: blue
+  APP_MODE: prod
+
+
+## RETRIEVE INFO COMMANDS
+# Get created configmaps
+kubectl get configmaps
+
+# Get info of a configmaps
+kubectl describe configmaps <configmap-name>

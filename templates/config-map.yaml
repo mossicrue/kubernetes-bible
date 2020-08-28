@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  KEY_1: value-1
+  KEY_2: value-2
+  ENV: prod
