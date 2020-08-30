@@ -1,0 +1,26 @@
+### KUBERNETES RELEASES ###
+
+## Get kubernetes api version
+# run the kubectl get nodes command and check the VERSION column
+
+## Kuberntes version meaning
+# we take for example kubernetes version v1.11.3
+# 1 is major version
+# 11 is minor version
+# 3 is the patch version
+
+# minors are relased every few months with new features and new functionalities
+# patches are released more often with critical bug fixes
+
+# The download of the kubernetes package contains all the control plane components
+# All of this components have the same release version
+- kube-apiserver
+- controller-manager
+- kube-scheduler
+- kubelet
+- kube-proxy
+- kubectl
+
+# However 2 components of kubernetes have their own release version:
+- etcd cluster
+- coreDNS
