@@ -1,0 +1,42 @@
+### OPERATING SYSTEM UPDATE ###
+
+## What happen when a node goes down?
+# If a node goes down and return up immediately then kubectl process starts and the pods come back online
+# If a node doesn't coeme up after 5 minutes, kubernetes consider the node dead.
+# In the dead node all the pods are terminated and if part of a replicaset, recreated on other pods
+
+## Pod Eviction Timeout
+# It's the time kubernetes wait for a pod to came back online setted in controll-manager, default is 5 minutes
+kube-controll-manager --pod-eviction-time=5m0s
+
+## A Node come back after Pod Eviction Timeout (PET)
+# When a node came back after the PET it comes up blank without any pod scheduled
+# If a pod running on the dead node wasn't part of a replicaset, it's gone forever
+
+## "Empty" a node from all the pods without losing any of them
+# The pods on the drained node are gracefully terminated and recreated on another nodes
+kubectl drain <node-name>
+
+# In case of any error related to Daemonsets run this command
+kubectl drain <node-name> --ignore-daemonsets
+
+# In case of any error related to Pods not managed by replicasets or deployments run this command
+kubectl drain <node-name> --ignore-daemonsets --force
+
+# The node is also "cordoned" or marked unschedulable for all pods until you specif remove restrictions running
+kubectl uncordon <node-name>
+
+# Pod that were moved to another nodes doesn't return to the original nodes after it comes back up online
+# New pods will be deployed on the node that was dead
+
+
+## Cordoning a node
+# Cordoning a node only mark node unschedulable for new pods
+# running pods on the cordoned nodes aren't terminated or moved to any other nodes
+kubectl cordon <node-name>
+
+
+## SAFE OS PATCHING/UPGRADING ON A NODE
+kubectl drain node01
+yum update -y && reboot
+kubectl uncordon node01
