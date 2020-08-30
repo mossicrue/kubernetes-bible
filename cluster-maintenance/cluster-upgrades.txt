@@ -1,0 +1,65 @@
+### KUBERNETES CLUSTER UPGRADE PROCESS ###
+
+# Does the Kubernetes components, outside coreDNS and ETCD, have to be at the same release versions?
+# No, the components can be at different release versions.
+# kube-apiserver is the primary component in the control plane and because the other components talke to
+# For this reason, non of the other components should ever be at a higher version of kubeapi-server
+
+# controller-manager and kube-scheduler can be at 1 version lower
+# kubelet and kubeproxy can be at 2 versions lower
+# kubectl can be from 1 version higher and 1 version lower
+
+# So if kube-apiserver is 1.10
+# controller-manager and kube-scheduler can be 1.10 or 1.9
+# kubelet and kubeproxy can be 1.10 or 1.9 or 1.8
+# kubectl can be 1.10 or 1.11 or 1.9
+
+# kubectl supports only the 3 recent minor versions
+# Recommended approach to upgrade is 1 version at a time
+
+## Upgrade k8s cluster on Google Cloud Platforms
+# Just a few click
+
+## Upgrade k8s cluster with kubeadm
+# We have a master and some workers node running in production serving users, example version is 1.10
+# Upgrading a cluster involve 2 major steps:
+- Upgrade the master node first
+- Upgrade the worker nodes then
+
+# While the master is upgrading, control plane controllers are down
+# When the master is down, applications aren't impacted, all workloads on worker nodes continous to serve users as normal
+# Since management is down, you can't access to clusters with kubectl or api, also, pods can't be deployed, deleted or updated
+# Once the master is updated and is back online management commands return to works
+# Having master component with a higher version of kubernetes is supported, so anything can affect negatively the cluster
+
+# Three strategy for update workers node:
+- All workers at the same time -> downtime, user affected
+- Upgrade one work node at time -> pods are re-scheduled on other nodes, no downtime
+- Add a new node with upgraded components -> pods are re-scheduled on new node, no downtime, easy to do on cloud infrastructure
+
+## Upgrade commands with kubeadm from 1.11 to 1.13
+# Retrieve a lot of useful inforamtions
+kubeadm upgrade plan
+# The first part of the output will show cluster and kubeadm versions, the latest available stable version and latest patch version of the installed version
+# Second part show the component to be upgrade manually as kubelet with current and available versions
+# The third section shows the control plane components current and available versions
+# Also, provide the command to upgrade the cluster
+
+## Update the master node (command launched in the master shell)
+# Install new version of kubeadm
+apt-get upgrade -y kubeadm=1.12.0-00
+kubeadm upgrade apply v1.12.0
+
+# Running kubectl get nodes still show master version at 1.11.x
+# This because the command return the kubelet version and not the api server itself
+# Upgrade kubelet packages
+apt-get upgrade -y kubelet=1.12.0-00
+systemctl restart kubelet
+
+## Upgrade a work nodes ($M command launched on master, $w command launched in worker node shell)
+$M kubectl drain <node-name> [--ignore-daemonset] [--force]
+$w apt-get upgrade -y kubeadm=1.12.00
+$w apt-get upgrade -y kubelet=1.12.00
+$w kubeadm upgrade node config --kubelet-version v1.12.00
+$w systemctl restart kubelet
+$M kubectl uncordon <node-name>
