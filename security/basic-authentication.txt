@@ -1,0 +1,98 @@
+### AUTHENTICATION ###
+
+# Kubernetes cluster consists of multiple nodes and various components that work togheter.
+# We have different users like
+- Administrators: they access the cluster to perform administrative tasks
+- Developers: they access the cluster to test or deploy applications
+- End Users: they access the applications deployed on the cluster
+- Third party users: access the cluster for integration porpuses
+
+# Securing access to Kubernetes cluster with authentication mechanisms
+
+# Security of the end who access the applications deployed on the cluster is managed by the applications itself internally
+
+## Users with administrative porpuses
+# 2 types:
+- Humans: like administrators and developers
+- Robots: like process, services, applications that have to access to the cluster
+
+
+# Kubernetes not manage users account natively, it relies on external source like a file with users details or certificates or third party identity services like LDAP
+
+# Kubernetes can manage only service accounts
+# Create a service account
+kubectl create serviceaccount <account-name>
+
+# Show service accounts
+kubectl list serviceaccount
+
+
+## User Access
+# All human users access is managed by the API server
+# If you are accessing the kube-apiserver through kubectl tool or curling api directly, all of this requests go through the apiserver.
+# Kube-apiserver authenticates the requests before processing them
+
+
+## How Kube-apiserver authenticate
+# There are different authentication mechanisms that can be configured:
+- list of username and passwords in a static password file
+- list of usernames and tokens in a static token file
+- using certificats
+- connect to 3rd party authentication protocols like LDAP, Kerberos etc
+
+
+## Static Password Files
+# Use a csv file as source for users informations
+# The file has 3 columns: password, username and user id
+# Also we can have an optional 4th column: group used to assign user to a specific groups
+# Example
+password123,user1,u0001,group1
+password456,user2,u0002,group1
+password789,user3,u0003,group2
+
+# We pass the file to the kube-apiserver.service file specifing the options --basic-auth-file=/path/to/user-details.csv
+# You must restart the service to take the change effects
+
+# If the cluster was setupped from kubeadm, then add --basic-auth-file=/path/to/user-details.csv to the command property in pod definition file
+# kubeadm will automatically restart the kube-apiserver once you update the definition file
+
+# Authenticate user during an api call
+curl -v -k https://<master-node-ip>:6443/api/v1/pods -u "user1:password123"
+
+
+## Static Token Files
+# Use a csv file as source for users informations
+# The file has the same type of columns of static password files
+# Instead of passwords there is token column
+CkZss7TdsTVHRHfqBMq_HqQUxBGCTgWj,user10,u0010,group1
+8loHzi27gJTO1xTqTd9SkJGYP8rYlNQn,user11,u0011,group2
+
+# Options to add in the kube-apiserver.service file or to the pod definition file
+--token-auth-file=/path/to/user-token.csv
+
+# Authenticate user during an api call
+curl -v -k https://<master-node-ip>:6443/api/v1/pods --header "Authorization: Bearer CkZss7TdsTVHRHfqBMq_HqQUxBGCTgWj"
+
+
+## FINAL NOTES:
+- Not a recommended authentication mechanism because password and tokens are stored like plain text
+- Consider volume mounts while providing the auth file in a kubeadm setup
+- Setup Role Based Authorization for new users
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
