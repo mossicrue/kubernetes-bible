@@ -1,0 +1,36 @@
+### SECURITY PRIMITIVES IN KUBERNETES###
+
+# Secured host
+# Every host in kubernetes must have access secured
+# root access and password authentication must be disabled
+# ssh key based authentication only
+
+## How to secure the kubernetes cluster:
+# kube-apiserver is the center of all operations, you can do pretty everything on the cluster
+# That's why we need to control access to API server itself
+
+# We need to take 2 important decision:
+- Who can access?
+- What can they do?
+
+## Who can access?
+# There are different ways you can authenticate to the API server
+- User and passwords stored in static files
+- User and tokens stored in static files
+- Certificates
+- Integration with External Authentication Providers like LDAP
+- Service accounts
+
+## What can they do?
+# Is defined by authorization mechanisms
+# Authorization is implemented using Role Based Access Control
+# RBAC users are associated to groups with specific permission
+# In addition there are other authorization module:
+- Attribute Based Access Control (ABAC)
+- Node Authorization
+- Webhook Mode
+
+# All communications with the cluster, between the various components (ETCD Cluster, kube controller manager, scheduler, api server) as well those running on the nodes (kubelet and kubeproxy) use TLS Encryption
+
+# By default all pods can access to the other pods in the cluster
+# We can restrict access between them using network policies
