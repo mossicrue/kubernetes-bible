@@ -1,0 +1,44 @@
+### BACKUP AND RESTORE KUBERNETES ###
+
+# There are several way to backup a kubernetes cluster
+# One can be to save all the definition file for an application
+- PROS: can use a source code repositories like github
+- CONS: you can't backup object created imperatively
+
+# Query the kube-apiserver for retrieve all object and store it in a definition file
+kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
+- PROS: can save also pods created imperatively
+- CONS: save only few resource groups
+
+## Using ETCD Cluster
+# Etcd store information about the state of our cluster, so information about itself.
+# Nodes and every other resource created in the cluster are stored in etcd
+# Instead of backup resource as before, backup the etcd server itself
+# etcd service as --data-dir parameter that says where all the data is stored, for example /var/lib/etcd
+
+# Store a snapshot with ETCD
+ETCDCTL_API=3 etcdctl snapshot save snapshot.db
+ETCDCTL_API=3 etcdctl snapshot save <file-path>
+
+# See status of a snapshot
+ETCDCTL_API=3 etcdctl snapshot status snapshot.db
+
+# Restore from a snapshot
+# stop kube-apiserver service
+systemctl stop kube-apiserver
+
+# restore snapshot
+ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
+--data-dir=/var/lib/etcd-from-backup \
+--initial-cluster master-1=https://192.168.5.11:2380,master-2=https://192.168.5.12.2380 \
+--initial-cluster-token etcd-cluster-1 \
+--initial-advertise-peer-urls https://${INTERNAL_IP}:2380
+
+# update the etcd.service configuration to use the new data directory and cluster token
+--initial-cluster-token etcd-cluster-1
+--data-dir=/var/lib/etcd-from-backup
+
+# reload daemon and restart etcd service
+systemctl daemon-reload
+systemctl restart etcd
+systemctl start kube-apiserver
