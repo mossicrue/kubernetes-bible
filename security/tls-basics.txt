@@ -1,0 +1,114 @@
+### TLS CERTIFICATES BASICS ###
+
+# A certificate is used to guarantee trust between two parties during a transaction
+# EG: When a user tries to access to a webserver, TLS certificates ensure that the communication between the user and the server is encrypted and the server is who it says is it.
+
+## Test Scenario
+# Without secure connectiovity, if a user access his online banking application, the credentials he type in would be sent to the server in a plain text format.
+# The hacker who sniffs the network data could easily retrieve the credentials and use it to hack user's bank account
+# YOU MUST ENCRYPT THE DATA!!! but how? Using encryption keys
+- The data is encrypted using a key which is basically a set of random set of alphanumerical character
+- The key is added to the data and the data is now encrypted in a way that cannot be recognized
+- The data is sent to the server
+- The hacker sniffs network and get the data but he can't do anything with it
+- However also the server that receive the data cannot decrypt it without the key
+- A copy of the key is sent to the server to allow the data to be decrypted and read the message
+- Since the key is sent in the same network, hackers can retrieve the key and decrypt the message too
+
+# This is Symmetric Encryption, is secure, but since it use the same key to encrypt and decrypt data and since the key is to be exchanged between sender and receiver, there is a risk that an hacker can read the data
+
+# To solve this problem we use Asymmetric Encryption
+# Instead of using only a key to encrypt and decrypt the data, it uses a pair of keys: a public key and a private key
+# For this example we are gonna call it "private key" and "public lock"
+- A key which is always with the user, so it's private
+- And a lock that anyone can access, so it's public
+
+# The trick is that if you encrypt data with your lock you can only opened with your key
+# The key is not to be shared with anyone else, it's private
+# The lock is public and can be shared with others but they can only lock things
+# No matter what is lock using the public lock, it can only unlocked by your private key
+
+## SSH Example for Asymmetric encryption
+# You want to access to a server without using password, too risky! Use key pairs!
+# running ssh_keygen you create 2 keys: id_rsa private key, id_rsa.pub public lock
+# add public lock to ~/.ssh/authorized_keys
+# ssh -i id_rsa user@server works without password now!
+# you can add your public lock to other servers and other user can do what you do in a really secure way
+
+## Websever example for Asymmetric encryption
+# generate the public and private keys with this commands
+# private key
+openssl genrsa -out my-bank.key 1024
+# example
+-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDMH1+oW3HPgcoMoM1hLE2w8ftp7ORkQCicTulC6DdNdhGJMno4
+rDhWoyMAepRcvqRCfo6VNoY0jQ+sjwxD612okV8q3/yabQhpEast6KFhTS2z/NkD
+TfC6WvzXaIGXLD1uklmkH95iQLMHbTzt0C3qQ2HU6LrNNpWGQVG3q+XH7QIDAQAB
+AoGAcSHWX7ZHDu5tcLBTBE+Mw8xqPtwn/ZQ9rdxilk2kEQ+mSncqnGx/US1bwfEu
+d3TGD4CbQAIXQdsI2+fwsVgq8LscFaQhltC15YoT6Pqh02k35zh7FbXCgsV/URzL
+vaqJsMV4eLhctNouI/b/HwcfaTCAV82LIJNpnrQY1i3s75UCQQD63TnL1w8MW+iO
+/fIzSSIOKwWvSZzZy7sNHZhpyEW7HeBqlO/HyCMS4XRSSKhk7u68dkppGYo08YKG
+yp9bGRffAkEA0E0tD8hLXBLXqifdqizaXM6CZ/WX0z1ts7oyuU92e8qORFiGeHuk
+oHzWRUTe2Xb0XfQ+NMLGB5hCBQ4hXeTJswJBAIMTgnZqiTdY8nt8XsfDR6MFgbPk
+D6uREsw4kYF8Hks1wiOObHcDsKfV21R/GFWcrmsUl66wpJEjO6M4TelohBsCQGlh
+EdHxL4bGFYsEnhSQmmvnIXv8eDGq2wvYv/6V38giojSbYHQlgRSb8z6Z5++2SUwa
+2zmP6+U9tvCdxG2e6BcCQQDUiRhVx+VQEFDWrFJd8+yzKLCMG4/biTIvZFkTSw8r
+z7w2HE64rVQCCUvtj+T/oiVtcydUU8rVEtqFrqCoS378
+-----END RSA PRIVATE KEY-----
+
+# public key
+openssl rsa -in my-bank.key -pubout > my-bank.pem
+# example
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDMH1+oW3HPgcoMoM1hLE2w8ftp
+7ORkQCicTulC6DdNdhGJMno4rDhWoyMAepRcvqRCfo6VNoY0jQ+sjwxD612okV8q
+3/yabQhpEast6KFhTS2z/NkDTfC6WvzXaIGXLD1uklmkH95iQLMHbTzt0C3qQ2HU
+6LrNNpWGQVG3q+XH7QIDAQAB
+-----END PUBLIC KEY-----
+
+## Combined Asymmetric and Symmetric encryption
+- When user try to access first time to the server using https, he gets the public key from the server
+- If the hacker sniff all the networks traffic he can get the public key
+- User browser encrypt the simmetric key with the public key provided by the server, the simmetric key is now secure
+- The user sends this to the servers, the hackers also gets a copy
+- The server uses the private key to decrypt the message and retrieve the simmetric key
+- Hacker will remain with only public key and encrypted simmetric key, he can't decrypt anything
+- Simmetric key is now available to server and user, now they can use use that to encrypt data and sent to each other
+- Reciever can use simmetric key to decrypt data and retrieve information
+
+# With asymmetric keys we exchange simmetric key between client and server
+# With symmetric key we have secured all future communications with them
+# A way to attack is to redirect network content to a fraudolent server with the copy of your bank application
+
+## CERTIFICATES
+# How to prevent it? Could we can check if the key is legitimate or not?
+# The server doesn't send the public key alone, it sends a certificates that has the public key in it
+# Example of certificate
+Certificate:
+    Data:
+        Serial Number: 42032708966204255
+    Signature Algorithm: sha256withRSAEncryption
+        Issuer: CN=kubernetes
+        Validity:
+            Not After: Feb 9 13:41:28 2020 GMT
+        Subject: CN=my-bank.com
+ X509v3 Subject Alternative Name:
+                DNS:mybznk.con, DNS:i-bank.com,
+                DNS:we-bank.com,
+        Subject Public Key Info:
+                    00:b9:b0:55:24:fb:a4:ef:77:73:7c:9b
+
+# Every certificate has a name on it, the person or subject who issued the certificates, this data helps to identify the certificates
+# For a web server the subject must match what the user types in the url on his browser
+# If the bank is known by any other names, and if they like their users to access their application with the other names as well then all those names should be specified in the certificates, under the "subject alternative name" section
+# Everyone can generate a certificates, you can generate a certificates saying you are Google, and the hacker does like this saying it's your bank
+
+## How to recognized if a certificate is legitimate or not?
+# Most important part of the certificates is who signed and issued it
+# If you generate the certificate then you will have to sign it by yourself -> Self Signed Certificates
+# Everyone looking at this certificates will tell that it isn't a safe certificate because you have signed it
+# Browser will check if the certificates has a fake signature or not
+# All browser are builted with a certificate validation mechanism where the browser checks the certificate it recived from the server and validates it making sure if it's legitimate or not
+# If it's identified as a fake certificates then it warns you (eg: "your connection is not secure" from chrome)
+
+## How to create a legitimate certificates that browser will trust?
