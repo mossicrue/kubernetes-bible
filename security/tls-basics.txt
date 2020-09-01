@@ -112,3 +112,32 @@ Certificate:
 # If it's identified as a fake certificates then it warns you (eg: "your connection is not secure" from chrome)
 
 ## How to create a legitimate certificates that browser will trust?
+# How do you get your certificates signed by someone with autorithy? From Certificates Authorities (or CA)!
+# CAs are well known organizations that can sign and validate your certificates for you
+# Famous are: Symentec, Digicert, Comodo, GlobalSign
+# How to sign the certificates by a CAs:
+- Generate a certificates sing request, or CSR using the key you generated earlier and the domain of your website
+openssl req -new -key my-bank.key -out my-bank.crs -subj "/C=US/ST=CA/O=MyOrg, Inc/CN=my-bank.com"
+- Certificates Authorities verify your details
+- Once it's checks out will sign it and send back to you the certificates
+# Now your certificate is signed by a valid ca!
+# If an hacker try to sign your certificates from a ca, the request will be rejected at verification process
+# The fake website he is hosting wont have a valid certificate
+
+## How Browser check if certificate is legitamate or signed by a fake CA?
+# For example, our certificate is siged by Symantec, how the browser know if is a valid CA and that the certificate was in fact signed by Symantec and not by someone says it's Symantec?
+# The CA themselves have a pair of public and private keys
+# They use it's private keys to sign the certificates
+# Public keys are builted in to the browsers
+# Browsers uses the public key of the CA to validate that the certificates was signed by the CA themselves
+
+# This type of certificates ensure that the websites we are visiting are legitimate
+# Don't help to validate sites hosted privately, for example internal mail or payroll application
+# For this type of certificate you can host your own private certificate authorities
+# You can install your private ca's public keys internally in your browser and sign the certificates with the private ca private key
+
+## All this flows of events is called PKI Public Key Infrastructure
+
+## Asymmetric Keys Naming convention
+# Public keys usually have this file extension: .crt or .pem (eg: server.crt, server.pem, client.crt, client.pem)
+# Private key usually have this file extension: .key or -key.pem (eg: server.key, server-key.pem, client.key, client-key.pem)
