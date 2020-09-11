@@ -1,0 +1,65 @@
+### TLS IN KUBERNETES ###
+
+# Type of TLS Certificates:
+- Public & Private Key -> Server Certificates
+- CA public and private keys pairs -> Root Certificates
+- Used by client to verify themselves -> Client Certificates
+
+# Where are used
+- Server certificates -> configured on the servers
+- Root Certificates -> configured on the CA servers
+- Client Certificates -> configured on the client
+
+## Certificates naming convention
+# Public keys: *.crt or *.pem
+- server.crt
+- server.pem
+- client.crt
+- client.pem
+
+# Private keys: *.key or *-key.pem
+- server.key
+- server-key.pem
+- client.key
+- client-key.pem
+
+# All communications between the components of a kubernetes cluster need to be secured
+# 2 primary requirements:
+- all the various services need to use server certificates
+- all clients need to use client certificates to verify they are who they say who are
+
+## Server Certificates for Servers
+# kube-api servers exposes an HTTPS service used to manage kubernetes cluster
+# it's a server that require certificates to secure all communications with its clients
+# we generate a certificate (apiserver.crt) and a key pair (apiserver.key)
+
+# ETCD server stores all information about the cluster
+# it require a pair of certificate and key for itself
+# certificate: etcdserver.crt -- key: etcdserver.key
+
+# The other server component in the cluster is on the worker nodes
+# kubelet services that expose an HTTPS API which kubeapi talks to interact to the worker nodes
+# certificate: kubelet.crt -- key: kubelet.key
+
+## Client Certificates for Clients
+# the client who access the kubeapi server are the administrators, trhough kubectl rest api
+# admin users requires a certificate and key pair to authenticate to the kube-api server
+# certificate: admin.crt -- key: admin.key
+
+# kube-scheduler talk to kube-api server to looks for pods that require scheduling and manage them
+# scheduler is a client that access the kube-api server
+# as scheduler is like admins, on the authenticating side, it need to be validate its identity using TLS too
+# certificate: scheduler.crt -- key: scheduler.key
+
+# kube-controller-manager is another client that access the kupe-api server
+# certificates: controller-manager.crt -- key: controller-manager.key
+
+# kube-proxy, also him need a client certificate to authenticate to the kube-api server
+# certificates: kube-proxy.crt -- key: kube-proxy.key
+
+# kube-api server, is the only component who talk with ETCD Server, kube-api it's a client of etcd
+# kube-api server can use the same keys used for serving its own API service
+# or generate new one specifically for connecting kube-api to etcd server
+
+# One Certificate Authority for cluster
+# CA certificate: ca.crt -- CA private key: ca.key
