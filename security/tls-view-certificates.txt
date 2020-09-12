@@ -1,0 +1,61 @@
+### VIEW CERTIFICATES DETAILS ###
+
+# First of all know how the kubernetes was setup, if with kubeadm or with "The Hard Way"
+- The Hard Way: all the certificates are generated manually
+- Kubeadm: automatically generated and configured
+
+# "The hard way" deploy all the components as native services on the nodes
+# kubeadm deploys theese as PODS
+
+
+### How to perform a certificates healthcheck on a cluster deployed with kubeadm
+
+## Point 1 - Identify all the certificates used in the system (see xlsx file)
+# Look in /etc/kubernetes/manifests/kube-apiserer.yaml file and mark down all the certificate file used for each purpose
+--client-ca-file
+
+--etcd-cafile
+--etcd-certfile
+--etcd-keyfile
+
+--kubelet-client-certificate
+--kubelet-client-key
+
+--tls-cert-file        -> api-server certificate file
+--tls-private-key-file -> api-server private key
+
+# Take each certificate and look inside it to find more details about the certificate
+# for example, we take the api-server certificate file (--tls-cert-file)
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
+
+Certificate:
+    Data:
+        Version: 3 (Ox2)
+        Serial Number: 3147495682089747350 (0x2bae26a58f090396)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: CN=kubernetes
+        Validity
+            Not Before: Feb 11 05:39:19 2019 GMT
+            Not After : Feb 11 05:39:20 2020 GMT
+        Subject: CN=kube-apiserver
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus :
+                    00:d9:69:38:80:68:3b:b7:2e:9e:25:00:e8:fd:01:
+
+                Exponent: 65537 (0x10001)
+        X509v3 extensions :
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage:
+                TLS Web Server Authentication
+            X509v3 Subject Alternative Name:
+                DNS:master, DNS:kubernetes, DNS: kubernetes.default,
+DNS:kubernetes.defau1t. svc, DNS:kubernetes.defau1t. svc. cluster. local,
+Address :10.96.0.1, IP Address:172.17.0.27
+
+- Start with the "CN" name on the certificate, under "Subject:" section, in this case is "kube-apiserver"
+- Then look for the alternative names, the kube-api server has many, make sure that all of them are specified
+- Check the validity section to identify the expired date
+- Check the issuer, kubeadm names the kubernetes CA as kubernetes itself
