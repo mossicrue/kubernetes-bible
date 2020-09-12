@@ -1,0 +1,12 @@
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: jane
+specs:
+  groups:
+  - system:authenticated
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ3pEQ0NBYlFDQVFBd2dZWXhDekFKQmdOVkJBWVRBa1ZPTVEwd0N3WURWUVFJREFSdWIyNWxNUTB3Q3dZRApWUVFIREFSdWIyNWxNUkl3RUFZRFZRUUtEQWxYYVd0cGNHVmthV0V4RFRBTEJnTlZCQXNNQkc1dmJtVXhHREFXCkJnTlZCQU1NRHlvdWQybHJhWEJsWkdsaExtOXlaekVjTUJvR0NTcUd

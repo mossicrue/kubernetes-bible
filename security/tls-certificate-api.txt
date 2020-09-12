@@ -1,0 +1,105 @@
+### TLS CERTIFICATES - API ###
+
+# Scenario: we set up the kubernetes cluster correctly, all certificates are ok but we have only one admin user
+# what happen when a new one will join the team?
+# We need to get him a pair of certificate and key pair for her to access the cluster
+# The new member do this:
+- create his own private key
+- generate a certificate signing request
+- sent to the me, the only admin
+# The admin will now:
+- takes the certificate signing request to the CA server
+- sign the certificate signing request using CA server private keys and root certificate
+- generate the certificates
+- send the certificates to the new admin
+
+# Now the user has his own key and certificates to authenticate with kubernetes
+# The certificates has an expiration time, after that the certificates will be invalid
+# Every time the certificate expires we follow the same process for generate a new CSR and getting signed by CA
+# The certificate files are keep rotating.
+
+
+## CA Server in Kubernetes
+# The CA is just a pair of keys and certificate files we have generated
+# Whoever gains access to these pair of files, can sign any certificates for the kubernetes environment
+# You can create as many users as you want with whatever privileges you want
+# This files need to be protected and stored in a safe environment, like a server that is fully secure
+# That server becomes a CA server and the certificates key files are safely stored in that server
+# Everytime you want to sign a certificate you must login on that servers
+# As of now we have the certificates placed on the kubernetes master node, master nodes is our CA server
+# Kubeadm tools do the same of the "Hard Way": create a CA pair of files and stores that on the master node itself
+
+
+## Kubernetes built-in Certificates API
+# What happen if the team or the environment grows?
+# The amount of unnecessarly work for sign and keep rotating certificates grow, an automation is needed.
+# Kubernetes has a built-in Certificates API that can do this for you.
+
+# You can send a csr directly to kubernetes with an API call
+# When you receive a certificate singin request you can use kubernetes api instead of logging onto the master node and sign the certificate
+# What you can do with Certificate API
+- Create a CertificateSigningRequest Object
+- Review and approve requests using kubectl commands
+- Share Certs to Users
+
+## How to sign a certificate via kubectl
+- A user first create a key
+openssl genrsa -out jane.key 2048
+
+- Generete the certificate signing request
+openssl req -new -key jane.key -subj "/CN=jane" -out jane.csr
+
+- Sends the request to the administrator
+
+- Encode in base64 the certificate request to put in the manifest file
+cat jane.csr | base64
+
+- The administrator create the CertificateSigningRequest object using a manifest file, example below
+# jane-csr.yaml
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: jane
+specs:
+  groups:
+  - system:authenticated
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  request:
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ3pEQ0NBYlFDQVFBd2dZWXhDekFKQmdOVkJBWVRBa1ZPTVEwd0N3WURWUVFJREFSdWIyNWxNUTB3Q3dZRApWUVFIREFSdWIyNWxNUkl3RUFZRFZRUUtEQWxYYVd0cGNHVmthV0V4RFRBTEJnTlZCQXNNQkc1dmJtVXhHREFXCkJnTlZCQU1NRHlvdWQybHJhWEJsWkdsaExtOXlaekVjTUJvR0NTcUd
+
+- create CertificateSigningRequest object
+kubectl create -f jane-csr.yaml
+
+# once the CertificateSigningRequest object is createdall admin can see the csr by running
+kubectl get csr
+NAME          AGE         REQUESTOR              CONDITION
+jane          10m         admin@example.org      Pending
+
+- approve the certificate
+kubectl certificate approve jane
+
+- rejecet the certificate
+kubectl certificate deny jane
+
+- delete a CertificateSigningRequest
+kubectl delete csr jane
+
+# at this point kubernetes sign the certificate using the CA key pairs and generate a certificate for the user
+# the certificate can then be extraced and shared with the user
+
+# view the certificate by viewing it in a yaml format
+kubectl get csr jane -o yaml
+# generated certificate is part of the output, but as before is in a base64 encoded format
+
+# get the certificate in plain text format, copying it from the yaml
+echo "LS0..Qo=" | base64 --decode
+
+
+## All the certificates operations are carried out by the controller-manager
+# CSR-Approving and CSR-Singing are the 2 controllers that are responsible for carrying out theese specific tasks
+# controller-manager service configuration has two options where you can specify this
+--cluster-singing-cert-file=/etc/kubernetes/pki/ca.crt
+--cluster-singing-key-file=/etc/kubernetes/pki/ca.key
