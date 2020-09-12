@@ -59,3 +59,11 @@ Address :10.96.0.1, IP Address:172.17.0.27
 - Then look for the alternative names, the kube-api server has many, make sure that all of them are specified
 - Check the validity section to identify the expired date
 - Check the issuer, kubeadm names the kubernetes CA as kubernetes itself
+
+
+## Point 2 - Inspect service logs
+# In case of "Hard Way" run 'journalctl -u etcd.service -l' or use the operating system logging functionality
+# In case of kubeadm, the components are deployed as pods, so checking the log of them by run 'kubectl logs <pod-name>'
+kubectl logs etcd-master
+# Sometimes the core components such kube-api server or etcd servera are down, the kubectl commands wont work
+# run 'docker ps -a' to get the list of container and then 'docker logs <container-id>'
