@@ -39,7 +39,8 @@ openssl req -new -key admin.key -subj "/CN=system:kube-scheduler" -out admin.csr
 # Same to do also for kube-controller and kube-proxy
 
 ## How to use certificates to authenticate
-- in curl call: curl https://kube-apiserver:6443/api/v1/pods --key admin.key --cert admin.crt --cacert ca.crt
+- in curl call:
+curl https://kube-apiserver:6443/api/v1/pods --key admin.key --cert admin.crt --cacert ca.crt
 - in kube-config.yaml in the users: sections for the api configuration
 
 
