@@ -1,5 +1,5 @@
-kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
 authentication:
   x509:
     clientCAFile: "/var/lib/kubernetes/ca.pem"
