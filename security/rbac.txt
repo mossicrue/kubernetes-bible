@@ -1,0 +1,98 @@
+### RBAC - Role Based Access Control ###
+
+# rbac use roles, and we can create Roles object creating a Role definition file
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "get", "create", "update", "delete"]
+
+# Each rules to specify has 3 sections:
+- apiGroups
+- resources
+- verbs
+
+# For core groups you can leave apiGroups section blank, for any other groups you specify the group name
+# The resources are what we want to give developer access to: pods
+# The actions that they can take are listed in "verbs" section: list, get, create, update, delete
+
+# To allow developer to create a config map we have to create a new rules like this
+- apiGroups: [""]
+  resoruces: ["ConfigMap"]
+  verbs: ["create"]
+
+# create role from definition file
+kubectl create -f developer-role.yaml
+
+# next step is to link the user to that role, to do this we create an object called RoleBinding
+# RoleBinding object links a user object to a role, we will name it devuser-developer-binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: devuser-developer-binding
+subjects:
+- kind: User
+  name: dev-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developer
+  apiGroup: rbac.authorization.k8s.io
+
+
+# Roles and RoleBindings fall under the scope of namespace, the role created before access only the default namespace
+# To limit user to access to a specific namespaces, specify the "namespace: <namespace>" property under metadata: of the definition file while creating them
+
+# list roles
+kubectl get roles
+
+# list rolebinding
+kubectl get rolebindings
+
+# view more details about role
+kubectl describe role <role-name>
+
+# view more details about RoleBinding
+kubectl describe rolebinding <role-binding-name>
+
+
+## Check access
+# check if I have the permission to do something
+kubectl auth can-i <verbs> <resource>
+kubectl auth can-i create  deployments -> yes
+kubectl auth can-i delete  nodes -> no
+
+# check if a user has the permission to do something
+kubectl auth can-i <verbs> <resource> --as <user>
+kubectl auth can-i create deployments --as dev-user -> no
+kubectl auth can-i create pods --as dev-user -> yes
+
+# also auth can-i have same "topic" of namespace, dev-user can create pods on default namespace but not in "test" namespace
+kubectl auth can-i create pods --as dev-user --namespace test -> no
+
+
+## Resource Name
+# We can go one level down and allow access to specific resoruces alone
+# For example we have 5 pods in namespace
+- blue
+- green
+- orange
+- purple
+- pink
+
+# we want to give user access to pods, but not all pods, only blue and orange
+# we add the "resourceNames:" property to the rules entry like this
+
+rules
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "create", "update"]
+  resoruceNames: ["blue", "orange"]
+
+
+## Identify authorization mode used in cluster
+# look for --authorization-mode
+kubectl describe pod kube-apiserver-master -n kube-system
