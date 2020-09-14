@@ -1,0 +1,96 @@
+### API GROUPS IN KUBERNETES ###
+
+## What is Kubernetes API?
+# All the operation we made on the kubernetes cluster interact with the API server
+# Both from kubectl commands or directly by REST curl
+
+# get kubernetes version
+curl https://kube-master:6443/version
+
+# get kuberetes cluster pods
+curl https://kube-master:6443/api/v1/pods
+
+# Focus of this file is to API paths: /version and /api
+# Kubernetes API are grouped into multiple groups based on their purpose
+# One for the apis, one for healthz, for metrics, logs
+# Version API is for viewing the version of the cluster as we just saw
+# Metrics and Healthz API are used to monitor the health of the cluster
+# Logs API is used for integrating third party logging applications
+# "api" and "apis" API are responsible for the cluster functionality
+
+## "api" and "apis"
+# "api" is the core group
+# "apis" is the named group
+
+# "api" Core group is where all core functionality exists /api/v1/functionality
+# like: namespaces, pods, replication controller, events, endpoints, nodes, bindings, persistent volumes, persistent volume claims, configmaps, secrets, services, etc
+
+# "apis" named group is more organized and all new features are going to be made available trough these named groups
+# There are groups for:
+- apps: /apps
+- extensions: /extensions
+- networking: /networking.k8s.io
+- storage: /storage.k8s.io
+- authentication: /authentication.k8s.io
+- authorization certificates: /certificates.k8s.io
+- etc
+
+# under apps there are
+- deployments: /apps/v1/deployments
+- replica sets: /apps/v1/replicasets
+- stateful sets: /apps/v1/statefulsets
+
+# under networking there are
+- network policies: /networking.k8s.io/v1/networkpolicies
+
+# certificates has
+- certificate singing requests: /certificates.k8s.io/v1/certificatesigningrequests
+
+# API Scheme <top>/v1/<bottom>
+# the elements in the "top" are the API Groups
+# the elements in the "bottom" are the resoruces of these groups
+# Each resoruce has a set of action associated with them called verbs
+# Some of that are: list, get, create, delete, update, watch
+
+
+# List available api groups
+curl -k http://localhost:6443
+{
+  "paths": [
+    "/api",
+    "/api/v1",
+    "/apis",
+    "/apis/",
+    "/healthz", ...
+
+# List all supported groups
+curl  -k http://localhost:6443/apis | grep "name"
+  "name": "extensions",
+  "name": "apps",
+  "name": "events.k8s.io",
+  "name": "auth"
+
+
+## Kubectl proxy
+# If you are accessing api directly with curl, you will not be allowed access except for certain APIs like version
+# This, because you don't have specified any authentication mechanism
+# To authenticate with curl you can add the "--key admin.key", "--cert admin.crt" and "--cacert ca.crt"
+# An alternate solutions is to start a kubectl proxy running
+kubectl proxy
+  Starting to serve on 127.0.0.1:8001
+
+# running kubectl proxy command launches a proxy service locally on port 8001 and uses credentials and certificates from your kubeconfig file to access the cluster
+# Now you can run curl command without authentication options accessing to kubectl proxy on 8001 port
+curl -k http://localhost:8001
+{
+  "paths": [
+    "/api",
+    "/api/v1",
+    "/apis"
+    "/apis/"
+    "/healthz", ...
+
+## KubeCTL Proxy vs Kube proxy
+# They are not the same
+- kube proxy enable conntectivity between parts and services across different nodes in the cluster
+- kubectl proxy is an HTTP proxy service created by kubectl utility to access the kube-api server
