@@ -51,7 +51,7 @@ spec:
   - image: nginx
     name: nginx
 
-# A CONTAINER by default can consumes as much resoruces as it requests, soffocating native processes on the node or of the other container
+# A CONTAINER by default can consumes as much resources as it requests, soffocating native processes on the node or of the other container
 # To avoid it, we can set a limit to the resources to use, by default KUBERNETES set pods limit to 1vCPU and 512Mi
 # To change the limits of resources of a pods, add the limit property on the resources key of spec macro-property of a pod, example below
 
@@ -75,6 +75,6 @@ spec:
       cpu: 2
 
 
-# What happen in case of resoruce overgrow
+# What happen in case of resource overgrow
 # CPU: kubernetes cap the cpu and the containers cannot use more cpu over its limit
 # memory: A pod can consume more memory than its limit. If the memory consume it's constantly over the limit, the pod will be terminated

@@ -48,8 +48,8 @@ curl https://kube-master:6443/api/v1/pods
 
 # API Scheme <top>/v1/<bottom>
 # the elements in the "top" are the API Groups
-# the elements in the "bottom" are the resoruces of these groups
-# Each resoruce has a set of action associated with them called verbs
+# the elements in the "bottom" are the resources of these groups
+# Each resource has a set of action associated with them called verbs
 # Some of that are: list, get, create, delete, update, watch
 
 

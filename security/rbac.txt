@@ -21,7 +21,7 @@ rules:
 
 # To allow developer to create a config map we have to create a new rules like this
 - apiGroups: [""]
-  resoruces: ["ConfigMap"]
+  resources: ["ConfigMap"]
   verbs: ["create"]
 
 # create role from definition file
@@ -75,7 +75,7 @@ kubectl auth can-i create pods --as dev-user --namespace test -> no
 
 
 ## Resource Name
-# We can go one level down and allow access to specific resoruces alone
+# We can go one level down and allow access to specific resources alone
 # For example we have 5 pods in namespace
 - blue
 - green
@@ -90,7 +90,7 @@ rules
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "create", "update"]
-  resoruceNames: ["blue", "orange"]
+  resourceNames: ["blue", "orange"]
 
 
 ## Identify authorization mode used in cluster

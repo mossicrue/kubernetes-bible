@@ -1,0 +1,83 @@
+### CLUSTER ROLES ###
+
+# Roles and RoleBindings are namespaced object, they are created in only one namespace
+# If you don't specify in which namespace create a Role, it will be used the default one
+
+# Are we able to limit a node to a single namespaces? Like node01, no, tose are cluster wide resources
+# resources are categorized as either namespaced or cluster scoped
+
+# Namespaced resources always belong to a namespace, if not specified to the default namespace
+# Cluster scoped resources are those where you don't specify a namespaces when you create them
+# Like nodes, persitent volume, persistent clusterroles and clusterrolebindings, certificatesigningrequests and namespaces
+
+# list all the namespaced resources
+kubectl api-resources --namespaced=true
+
+# list all the cluster scoped resources
+kubectl api-resources --namespaced=false
+
+
+## How we authorize users to access cluster wide resources like nodes or persistent volumes?
+# With ClusterRoles and ClusterRoleBindings!
+
+## ClusterRoles
+# They are just like Roles except they are for a clusters scoped resources
+# We can create a cluster admin role to provide a cluster administrator permission to view create or delete nodes in a cluster
+# Similiarly, we can create Storage Administrator role to authorize a storage admin to create persistent volumes and claims
+
+# ClusterRole definition file
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-administrator
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list", "get", "create", "delete"]
+
+# create a clusterrole
+kubectl create -f cluseter-admin-role.yaml
+
+# list cluster roles
+kubectl get clusterrole
+
+# get more info about cluster roles
+kubectl describe clusterrole <cluster-role>
+
+
+## ClusterRoleBindings
+# Use to link a user to a cluster roles, definition file below
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-role-binding
+subjects:
+- kind: User
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-Administrator
+  apiGroup: rbac.authorization.k8s.io
+
+# create the ClusterRoleBinding
+kubectl create -f cluster-admin-binding-role.yaml
+
+# list all cluster role binding
+kubectl get clusterrolebinding
+
+# get more data of clusterrolebinding
+kubectl describe clusterrolebinding <clusterrolebinding>
+
+## Quick notes on cluster rules with namespaces
+# Is possible to create a cluster role for a namespaced resources
+# When a user is authorized to access the pods with a cluster role, he can access to all pods across the cluster
+
+
+
+
+
+
+
+
+#

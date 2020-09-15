@@ -7,5 +7,5 @@ rules:
   resources: ["pods"]
   verbs: ["list", "get", "create", "update", "delete"]
 - apiGroups: [""]
-  resoruces: ["ConfigMap"]
+  resources: ["ConfigMap"]
   verbs: ["create"]
