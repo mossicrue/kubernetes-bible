@@ -1,0 +1,71 @@
+### IMAGE SECURITY ###
+
+## Image
+# How to tell a pod to use a secure source of image when creating a pod?
+
+# Example with nginx pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+
+# let's look to image name, it is "nginx", but what is this image and where is this image pulled from?
+# pod imagename follow dockers naming convention
+# the value "nginx" is the image or repository name
+# when you say "image: nginx", you are saying "image: nginx/nginx"
+- the frist nginx (left) is the user/account
+- the second (right) nginx is the image/repository
+
+# if you don't provide any account/image string, it is assumed that user and image have the same value
+- image: nginx --> image: nginx/nginx
+- image: ubuntu --> image: ubuntu/ubuntu
+
+## Where are the images pulled from?
+# From a registry, to specify before the account name, new format will be: "image: registry/account/image"
+# If you don't specify a registry, it is assumed that the image is on the docker's defalut registry: dockerhub
+# DNS name for the repository is docker.io
+- image: nginx/nginx --> image: docker.io/nginx/nginx
+
+# The registry is where all the images are stored, when you create or update an image you push it to the registry
+# Everytime anyone deploys this application, it is pulled from that registry
+
+# Another popular registry is Google Container Registry or gcr.io
+# example of image: gcr.io/kubernetes-e2e-test-images/dnsutiles
+
+# If you have an application that you want to remain private, hosting an internal private registry is a good solution
+# Many cloud service provider like AWS, Azure or GoogleCP provide a private registry for you cloud account by default
+
+
+## Private Repository
+# On any of the different type of registry (cloud, private from gcp or internally private), you can choose to make a repository private that can be accessed using a set of credentials
+
+# From docker prespective to run a container using a private image, you first login to your private registry
+docker login private-registry.io
+# and then issue the docker run pulling an image from your private registry
+docker run private-registry.io/apps/internal-app
+
+
+## How to add the login part to private registry? How to pass credentials to the docker runtime on the worker node?
+# Firts create a docker registry object running the command
+kubectl create secret docker-registry <registry-credentials-name> \
+    --docker-server=private-registry.io \
+    --docker-username=registry-user \
+    --docker-password=registry-password \
+    --docker-email=registry-user@org.com
+
+# After that replace the image value full path of the one in the private registry
+# And add the imagePullSecrets entry with the name of registry credentials
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: private-registry.io/apps/internal-app
+  imagePullSecrets:
+  - name: <registry-credentials-name>
