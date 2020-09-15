@@ -1,0 +1,51 @@
+### SECURITY CONTEXTS ###
+
+# When you run a docker container you have the option to define a set of security stanrds like:
+
+- the id of the user used to run the container
+docker run --user=1001 ubuntu sleep 3600
+
+- the Linux capabilities that can be added or removed from the container
+docker run --cap-add MAC_ADMIN ubuntu
+
+# These data can be configured also in kubernetes!
+# That is possible because a pod incapsulate a container
+# You can choose if configure the security settings at container level or at pod level
+
+# If you configure it at pod level, the settings will be carried over all the containers in the pod
+# example of the security context --user=1001 options
+# pod level
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+spec:
+  securityContext:
+    runAsUser: 1001 # this will replace the --user=1001 in the docker run command
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "3600"]
+
+
+# container level
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "3600"]
+      securityContext:
+        runAsUser: 1001
+        capabilities:
+          add: ["MAC_ADMIN"]
+
+## NOTE: Capabilities are only supported at the container level not at the POD level
+## NOTE: Container level security contexts override the pod level ones
+
+## Utils command
+# get the user running a pod
+kubectl exec <pod> -- whoamik
