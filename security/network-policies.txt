@@ -1,0 +1,103 @@
+### NETWORK POLICIES ###
+
+## Traffic
+# We have a web server serving front-end to users, an Api server serving back-end API, and a database server
+- The user send a request to the web server at port 80
+- The web server then sent a request to the API at port 5000
+- The API server then fetches data from the database server at port 3306 and sends data back
+
+# There are 2 type of traccif: Ingress and Egress
+# Web server prespective
+- it receives ingress traffic from the users on port 80
+- has egress Traffic to api server on port 500
+- the response back to the user do not really matter
+
+# Api server prespective
+- it receives ingress traffic from the web server on port 5000
+- has egress traffic to 3306 to the database server
+
+# Database server prespective
+- it receives ingress traffic from the api server on port 3306
+
+## List of rules
+- Ingress      80    Web Server
+- Egress     5000    Api Server
+- Ingress    5000    Api Server
+- Egress     3306    DB Server
+- Ingress    3306    DB Server
+
+## Cluster Network Security
+# We have a cluster with a set of nodes hosting a set of pods and services
+# Each node has an IP address, also each pod as well as service
+# One of the pre-requisite for networking in kubernetes (whatever solution you implement) is that Pods should be abel to communicate with each other without having to configure any additional settings like routes
+
+# For example, all pods are on a virtual private network that spans across the nodes in the cluster.
+# They can all reach each other using the IPs by default or pod names or services configured for that purpose
+# kubernetes is configured by default with an "All Allow" rule that allow traffic from any pod to any other pod or services
+
+## kubernetes level of the scenario above
+# For each component in the application we deploy a POD
+- One "Web Pod" for the front-end server
+- One "Api Pod" for the API server
+- One "DB Pod" for the Database Server
+
+# We create services to enable communication between PODs and to the end-user
+# By default all the pods can communicate with eatch other in the kubernetes cluster
+# What if we don't want the fron-ent web server to be able to communicate with the database server directly?
+# We can use Network Policy to allow traffic to the db server only from the api server
+
+# Network Policy is an object of the kubernetes namespace like pod, replicaset or services
+# The network policy is linked to one or more pods and in this case would say: Only allow Ingress Traffic from API Pod on Port 3306
+# Once this policy is created, it blocks all other traffic to the POD and only allows traffic that matches the specified rule
+
+## How to apply or link a network policy to a pod?
+# Using label and selectors
+# We label the pod and use the same labels on the pod selector fields in the network policy
+# example of network policy object
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          name: api-pod
+    ports:
+    - protocol: TCP
+      port: 3306
+
+# Create a policy
+kubectl create -f <policy-definition.yaml>
+
+# List network policy
+kubectl get networkpolicies
+
+# Get more details of a netowrk policy
+kubectl describe netowrkpolicies <policy-name>
+
+
+
+# NOTE: Not all the netowrk solution you use for Kubernetes supports network policies!
+# Kube-router, Calico, Romana, Weave-net support network policies
+# Flannel DO NOT support them
+
+# If you create a network policy in a cluster with not supported network you don't get any error
+# simply the rule will not be apply/enforced
+
+
+
+
+
+
+
+
+
+
+#
