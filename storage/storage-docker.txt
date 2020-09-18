@@ -1,0 +1,143 @@
+### STORAGE IN DOCKER ###
+
+# When you install Docker on a system it creates this folder structure at /var/lib/docker
+/var/lib/docker
+|- aufs
+|- containers
+|- image
+\- volumes
+
+# This is where Docker stores all its data by default
+# Data are files related to images and containers running on the dock or host, for example
+- all files related to containers are stored under the containers folder
+- the files related to images are stored under the image folder
+- any volumes created by docker containers are created under the volumes folder
+
+
+## Docker Layered Architecture
+# How Docker stores files of an image and a container?
+# When Docker builds images it builds these in a layered Architecture
+# Each line of instruction in the docker file creates a new layer in the Docker image with just the changes from the previous layer
+# Example Dockerfile
+FROM Ubuntu
+RUN apt-get update && apt-get -y install python
+RUN pip install flask flask-mysql
+COPY . /opt/source-code
+ENTRYPOINT FLASK_APP=/opt/source-code/app.py flask run
+
+docker build Dockerfile -t /root/my-custom-app
+
+Layer 1. 120M - Base Ubuntu operating system
+layer 2. 306M - Changes in apt packages (update of all packages and install of python)
+layer 3. 6.3M - Changes in pip packages (install of python packages flask and flask-mysql)
+layer 4. 229B - Add of the source code (copy command)
+layer 5.   0B - Update Entrypoint of the image
+
+# Since layer only stores the changes from the previous layer, size of the layers change
+# Ubuntu base system is about 120 MB, the apt packages that are installed are about 300MB and the remaining layers are small
+
+# Consider a second application with a different dockerfile but is very similar to the first application
+# It use the same os, same python library but different source code to create different application
+# Example Dockerfile2
+FROM Ubuntu
+RUN apt-get update && apt-get -y install python
+RUN pip install flask flask-mysql
+COPY . /opt/source-code
+ENTRYPOINT FLASK_APP=/opt/source-code/app.py flask run
+
+# What happen when we build the second Dockerfile?
+docker build Dockerfile2 -t /root/my-custom-app-2
+
+Layer 1.   0M - Base Ubuntu operating system
+layer 2.   0M - Changes in apt packages (update of all packages and install of python)
+layer 3.   0M - Changes in pip packages (install of python packages flask and flask-mysql)
+layer 4. 229B - Add of the source code (copy command)
+layer 5.   0B - Update Entrypoint of the image
+
+# Since the first 3 layer ar the same, Docker REUSES the same 3 layers it built for the first applications
+# It creates only the last 2 layers with the new sources and new entrypoint
+# In this way Docker builds image faster and efficienctly saves disk space
+
+# This is also applicable if you were to update your application code
+# When you update your application code Docker reuses all the previous layers from cache and quickly rebuilds the applications image by updating the latest source code, saving a lot of times during rebuilds and updates
+
+# When you run a container based off of this image, using the docker run command, Dockers creates a container based off of these layers and creates a new wirteable layer
+# The layer is used to store data created by the container itself like log files by the applications or any temporary or any file modified by the user on that container
+
+# Read Only Layer
+Layer 1. RO - Base Ubuntu operating system
+layer 2. RO - Changes in apt packages (update of all packages and install of python)
+layer 3. RO - Changes in pip packages (install of python packages flask and flask-mysql)
+layer 4. RO - Add of the source code (copy command)
+layer 5. RO - Update Entrypoint of the image
+
+# Read Write Layer
+Layer 6. RW - Container created
+
+
+# When the container is destroyed this layer and all of the changes stored in it are destroyed too
+# The same image layer is shared by all containers created using this image
+
+## COPY ON WRITE MECHANISM
+
+# This is how copy on write mechanism works
+# In the example before, the code was stored in the RO container layers, and can't be modified but,
+# What if I wish to modify the source code to say "let's test a change"?
+
+# The same image layer may be shared between multiple containers created from this image
+# Does it means that I cannot modify files inside the container?
+# No, I can still modify this file but before I save the modified file Docker automatically creates a copy of the file in the RW layer and I will then be modifying a different version of the file
+
+# What happen when we get rid of the container?
+# All the data that was stored in the container layer also gets deleted
+# The change we made to the app.py and the files we created get also removed
+
+## Volume Mounting
+# How to persists this change and data?
+# For example if we were working with a database and we would like to preserve the data created by container
+# We could add a persistent volume to the container
+
+# How to add a persistent volume to a container
+- create a volum running "docker create volume <volume_name>"
+docker volume create data_volume
+# this will create the directory data_volume under the path /var/lib/docker/volumes/ -> /var/lib/docker/volumes/data_volume
+- then mount the volume inside the docker container when running docker run command using -v option like this
+docker run -v data_volume:/var/lib/mysql mysql
+# this will mount the data_volume volume under /var/lib/mysql on the container, where the mysql store the data
+# When the container is destroyed the data is still active
+
+# What happen when I run docker run with volume options without the specified volume
+# If I run a "docker run -v data_volume2:/var/lib/mysql mysql" and the volume doesn't exists, Docker will automatically create a volume called data_volume2 and mount it to the container
+
+## Bind Mounting
+# What if we had our data already at another location, for example we have some external storage on the docker hosts or at /data and we would like to store database data on that volume and not in the default /var/lib/docker/volumes folder?
+# Running the docker run -v command but in this case we will provide the complete path to the folder we would like to mount
+docker run -v /data/mysql:/var/lib/mysql mysql
+
+# Volume Mount mounts a directory from the docker volume directory
+# Bind Mount mounts a directory from any location on the docker host
+
+# -v options is the old way, new way is the --mount, more verbose and functional
+# you can specify each parameter in key equals values format.
+
+# Fore example, the command "docker run -v /data/mysql mysql" becomes
+docker run --mount type=bind,source=/data/mysql,target=/var/lib/mysql mysql
+- type is bind
+- source is the location on my host
+- target is the location on my container
+
+
+# For doing all this storage related works Docker uses stroage drivers like
+- AUFS
+- ZFS
+- BTRFS
+- Device Mapper
+- Overlay
+- Overlay2
+
+# depending on the os of the docker host the storage driver may change
+# For example on Ubuntu the default storage driver is AUFS that is not present on Fedora or CentOS
+# For RHEL OS the better choice would be device mapper
+
+# Docker will automatically choose the best storage drivers available based on the operating system
+# Different storage drivers will lead to different storage performance 
