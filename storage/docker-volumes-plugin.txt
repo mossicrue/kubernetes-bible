@@ -1,0 +1,33 @@
+### DOCKER VOLUMES DRIVER PLUGIN ###
+
+# Storage drivers help manage storage on images and containers
+# If you want persistent storage in container you must creates volumes
+
+# Volumes are not handled by storage drivers
+# Volumes are handled by volume driver plugins, the default volume driveer plugin is Local
+# Local volume driver plugin helps create a volume on the Docker host and store its data under the /var/lib/docker/volumes directory
+# There are many other volume driver plugins that allow you to create a volume on third party solutions like:
+- Azure File Storage
+- Convoy
+- DigitalOcean Block Storage
+- Flocker
+- Google Compute Persistent Disk
+- GlusterFS
+- NetApp
+- RexRay
+- Portworx
+- VMWare vSphere Storage
+
+# Some of these volumes drivers support different storage providers
+# For example: RexRay storage driver can be used to provision storage on AWS EBC S3 EMC storage arrays like Isilon or Scale.io or Google Persistent Disk on OpenStack Cinder
+
+# Choose a specific volume driver for a container
+docker run -it      \
+    --name mysql    \
+    --volume-driver rexray/ebs  \
+    --mount src=ebs-vol,target=/var/lib/mysql  \
+    mysql
+
+# With this command you choose to use RexRay EBS to provision a volume from Amazon EBS
+# This will create a container and attach a volume from the AWS Cloud
+# When the container exits your data is safe in the cloud
