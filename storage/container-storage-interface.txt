@@ -1,0 +1,40 @@
+### CONTAINER STORAGE INTERFACE ###
+
+# In the past Kubernetes used Docker alone as the container runtime engine and all the code to work with Docker was embedded within Kubernetes source code
+# With other container runtime engines like rkt and cri-o it was important to open up and extend support to work with different container runtimes and not be dependent on the kubernetes source code.
+# That's why container runtime interface (or CRI) born
+
+
+## Container Runtime Interface
+# CRI is a standard that defines how an orchestration solutionl like kubernetes would communicate with container runtimes like Docker
+# In the future if any new container runtime interface is developed they can simply follow the CRI standards and that new container runtime would work with kubernetes without really having to work with kubernetes team of developers or touch the kubernetes source code.
+
+
+## Container Network Interface
+# Similarly, as we saw for the netowrking section, to extend support for different networking solutions the Container Network Interface was introduced
+# Any new networking vendors could simply develop their plug in based on the CNI standards and make their solution work with kubernetes
+
+## Container Storeage Interface
+# Ss you can guess, the container storage interface was made to support multiple storage solutions
+# With CSI you can now write your own drivers for your own storage to work with kubernetes
+# PortWorx, Amazon EBS, DELL EMC, Isolon, PowerMax, Unity, Extreme IO, NetApp, Nutanix, HP, Hitachi, Pure Storage, everyone has got their own CSI drivers
+
+# NOTE: CSI is not a kubernetes pecific standard, it is meant to be a universal stard
+# If implemented allows any container orchestration tool to work with any storage vendor with a supported plug in
+# Currently Kubernetes, Cloud Foundry and Mesos are onboarded with CSI
+
+
+## How CSI looks like?
+# It defines a set of RPC or remote procedure calls that will be called by the container orchestrator
+# This must be implemented by the storage drivers
+
+# For example, CSI says that when a pod is created and requires a volume the container orchestrator, in that case kubernetes, should call the CreateVolume RBC and pass a set of details such as the vlume name
+# Storage driver should implement this RBC and handle that request and provision a new volume on the storage array and return the results of the operations
+
+# Similarly the container orchestrator should call the DeleteVolume RBC when a volume has to be deleted
+# The storage driver should implement
+- the code to decommission the volume from the array when that call is made
+- the specification details of
+  * which parameters should be sent by the caller
+  * what should be received by the solution
+  * what error codes should be exchanged
