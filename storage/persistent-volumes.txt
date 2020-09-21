@@ -1,0 +1,56 @@
+### PERSISTENT VOLUMES IN KUBERNETES ###
+
+# We have configured volumes in the pod definition file
+# Every configuration information require to configure storage for the volumes goes into the pod definition file
+# Storage can be managed more centrally:
+- administrators can create a large pool of storage
+- users carve out pieces from it has required
+
+# A Persistent Volume is a cluster wide pool of storage volumes configured by an administrator to be used by user deploying applications on the cluster
+# The users can now select storage from this pool using persistent volume claims
+
+# Persistent Volume Definition File
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-vol1
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /tmp/data
+
+# accessModes says how a volume should be mounted on the hosts: read only mode, read write mode, etc
+# Supported values are: ReadOnlYMany, ReadWriteOnce, ReadWriteMany
+# NOTE: never use hostPath options for storage in production environment
+
+
+# create a persisten volume
+kubectl create -f pv-definition.yaml
+
+# list all the volume
+kubectl get persistentvolume
+
+
+# To use AWS EBS replace the hostPath section
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-vol1
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  awsElasticBlockStore:
+    volumeID: <volume-id>
+    fsType: ext4
+
+
+
+
+
+
+#
