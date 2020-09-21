@@ -14,6 +14,10 @@
 # To retain the number when the POD is deleted, we create a volume
 # When you create a volume you can choose to configure it storage in different ways
 # In this example we specify the /data directory as source of the volume
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod-with-volume
 spec:
   containers:
   - image: alpine
