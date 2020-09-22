@@ -1,0 +1,122 @@
+### STORAGE CLASS IN KUBERNETES ###
+
+## Static Provisioning Volume
+# Example of a persistent volume from Google Persistent Disk
+apiVersion: v1
+kind: persistentVolume
+metadata:
+  name: pv-vol1
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 500Mi
+  gcePersistentDisk:
+    pdName: pd-disk
+    fsType: ext4
+
+# The problem here is that before this Persistent Volume is created, you must have created the disk on Google Cloud
+gcloud beta compute disks create --size 1GB --region us-east1 pd-disk
+
+# Every time an application requires storage, you have to first manually provisioned the desk on Google Cloud and then manually created a persistent volume definition file using the same name as that of the disk that you created.
+
+
+# It would be nice if the volume gets provisioned automatically when the application requires it
+# That's where storage classes come in!
+
+## Dynamic Provisioning
+# With storage classes you can define a provisioners like Google Storage that can automatically provisions storage on Google Cloud and attach that to pods when a claim is made
+# This is Dynamic Provisioning of Volumes
+
+# It's done by creating a kubernetes StorageClass object
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: google-storage
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-standard
+  replication-type: none
+
+# We no longer need the Persistent Volume definition files because the Persistent Volumes and any associated storage are going to be created automatically when the storage class is created
+# For the pvc, to use the storage class we defined, we must specify the storage class name in the pvc definition file
+# updated pvc-storage-class.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-claim
+spec
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: google-storage
+  resoruces:
+    requests:
+      storage: 500Mi
+
+# pod definition file remain untouched
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+      - mountPath: "/var/www/html"
+        name: mypd
+  volumes:
+    - name: mypv
+      persistentVolumeClaim:
+        claimName: my-claim
+
+
+# NOTE: Storage class still creates a Persistent Volume, just you don't have to manually create a PV anymore
+# It's created automatically by the storage class
+
+# NOTE: There are different storage classes from different vendors, like AWS EBS, AzureFile, AzureDisk, CephFS
+# In them you can pass additional parameters like the type of disk, replication type, etc
+# The parameters are strictly dependent on the storage class you choose
+
+
+# You can create different storage class from the same vendors using different parameters
+# Example: silver, gold and platinum disk with Google Persistend Disk
+- Silver Storage Class: standard disk
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: silver
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-standard
+  replication-type: none
+
+- Gold Storage Class: ssd drivers
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: google-storage
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: gold
+  replication-type: none
+
+- Platinum Storage Class: ssd drivers and replication
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: platinum
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  replication-type: regional-pd
+
+
+
+
+
+
+
+
+
+#

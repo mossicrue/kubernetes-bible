@@ -67,4 +67,4 @@ spec:
   volumes:
     - name: mypv
       persistentVolumeClaim:
-        claimName: myclaim
+        claimName: my-claim
