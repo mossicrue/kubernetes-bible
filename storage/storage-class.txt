@@ -64,7 +64,7 @@ spec:
       image: nginx
       volumeMounts:
       - mountPath: "/var/www/html"
-        name: mypd
+        name: mypv
   volumes:
     - name: mypv
       persistentVolumeClaim:

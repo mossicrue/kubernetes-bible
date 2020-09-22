@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: my-claim
 spec:
-  accessMode:
+  accessModes:
     - ReadWriteOnce
   resources:
     requests:
