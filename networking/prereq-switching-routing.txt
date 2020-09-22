@@ -1,0 +1,145 @@
+### NETWORK PREREQUESITES - SWITCHING AND ROUTING ###
+
+## SWITCHING
+# What is a network?
+# We have 2 computers A and B (laptops, desktops, VMs on cloud) How does system A reach system B?
+# Connecting them to a switch and the switch creates a network containing the two systems
+
+# To connect them on a switch we need an interface on each host, physical or virtual, depending on the host
+# To see the interfaces on the host
+ip link
+eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc
+fq_code1 state UP mode DEFAULT group default qlen 1000
+
+# In this case, we look at the interface named eth0 that we will be using to connect to the switch
+# Let's assume switch address is 192.168.1.0
+# We then assign on the systems a IP addresses on the same network
+A - ip addr add 192.168.1.10/24 dev eth0
+B - ip addr add 192.168.1.10/24 dev eth0
+
+# Once the links are up and the IP addresses are assigned, the computer can now communicate with each other through the switch
+# The switch can only enable communication within and network which means it can receive packets from a host on the network and deliver it to other systems in the same network
+A - ping 192.168.1.11 --> will works, A and B are in the same network
+
+# Say we have another network at address 192.168.2.0 with systems C & D
+# C system has 192.168.2.10 as IP while D systems has 192.168.2.11
+
+## ROUTING
+# How does a system in one network reach a system in the other?
+# How the system B with the IP 192.168.1.11 reach system C with the 192.168.2.10 on the other network?
+# That's where a Router comes in! It helps connect two networks togheter
+# It's an intelligent device, think of this as another server but with many network ports
+
+# Since it connects to the two separate networks, it gets 2 IP assigned, one on each network
+# In the first network we assign it the IP address 192.168.1.1 and in the second network 192.168.2.1
+# Now the router is connected to the two networks and can enable communication between them
+
+# When system B tries to send a packet to system C, how does it know where the router is on the network?
+# We have to configure the systems with a gateway or a route
+# If network is a room, the gateway is a door to the outside world: other networks or the internet
+# Systems need to know where that door is to go through that
+
+# To see the route configuration on a system run
+route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+
+# From the output above there aren't any route defined, system B isn't able to reach system C
+# It can only reach the systems in the same network (192.168.1.0/24)
+# To enable system B reach the 192.168.2.0 network run "ip route add <destination-network> via <source-gateway>"
+ip route add 192.168.2.0/24 via 192.168.1.1
+# With this command you will reach 192.168.2.0 network through the door or gateway at 192.168.1.1
+
+# Running the route command now show that we have a route added to reach the 192.168.2.0 network
+route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.2.0     192.168.1.1     255.255.255.0   UG    0      0      0   eth0
+
+# NOTE: This has to be configured on all the systems
+# EG: If System C need to send a package to system B, you need to add a route on system C's routing table to access network at 192.169.1.0 through the router configured with the IP Adress 192.168.2.1
+
+# What if you need access to the internet, say you need access to Google at 172.217.194.0 network on the internet?
+# You connect the route to internet and then add a new road in the routing table to route traffic to 172.217.194.0/24
+ip route add 172.217.194.0/24 via 192.168.2.1
+
+# There are so many different sites on different networks on the Internet
+# Instead of adding a routing table entry for each of this network you can simply says for any network that you don't know a route to, use this router as the default gateway
+ip route add default via 192.168.2.1
+
+# This way any request to any network outside of your existing network goes to this particular router
+# NOTE: Instead of the world default you can use 0.0.0.0, that means any IP, the 2 entries below are the same
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         192.168.2.1     255.255.255.0   UG    0      0      0   eth0
+0.0.0.0         192.168.2.1     255.255.255.0   UG    0      0      0   eth0
+
+# If 0.0.0.0 value is in the Gateway filed indicates that you don't need a gateway, like devices in the same networks
+# System C use this route to reach System D
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.2.0     0.0.0.0         255.255.255.0   UG    0      0      0   eth0
+
+
+## DEFAULT GATEWAY
+# What if we have many routers?
+# 1 for internal network (192.168.2.1) and one for internet connection (192.168.2.1)
+# You will need two separate entries, one entry for the internal private network and the other with the default gateway for all other networks, including public networks
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         192.168.2.1     255.255.255.0   UG    0      0      0   eth0
+192.168.1.0     192.168.2.2     255.255.255.0   UG    0      0      0   eth0
+
+
+## HOW TO SETUP A LINUX HOSTS A ROUTER
+# We have 3 hosts: A, B and C
+- A and B are connected to 192.168.1.0 network
+- B and C are connected to 192.168.2.0 network
+# Host B is connected to both the networks using two interfaces: eth0 and eth1
+- A has IP 192.168.1.5
+- C has IP 192.168.2.5
+- B has IP 192.168.2.6 and 192.168.1.6
+
+# How do we get A to talk to C?
+# If i ping C from A the output would says that Network is unreachable
+A: ping 192.168.2.5
+Connect: Network is unreachable
+# This is because host A don't know hot to reach the network 192.168.2.0
+# We need to tell host A that the door or gateway to network 192.168.2.0 is through host B
+# We do that by adding a routing table entry to access 192.168.2.0 via gateway 192.168.1.6
+ip route add 192.168.2.0/24 via 192.168.1.6
+
+# Host C will have to send back responses to host A.
+# When C tries to reach A at 192.168.1.0 network it will face the same issue
+# We need to add a route for C that tells it can reach A passing through B which is acting as a router
+ip route add 192.168.1.0/24 via 192.168.2.6
+
+# Now if we try to ping another time C from A we didn't get any error messages but still don't get any response
+# By default, in Linux, packet are not forwarded from one interface to the next
+# Packets received on eth0 on host B are not forwarded to elsewhere through eth1 for security reasons
+# For example, if you had eth0 connected to private network and eth1 to a public network, we don't want anyone from public network to easily send messages to the private network unless you explicitly allow that
+# In this case since we know both interface on B are private networks it's safe to enable commmunication between them we can allow host B to forward packets from one network to the other
+
+# The possibility for a host to forward packets between interfaces is governed by a setting in this system at the file /proc/sys/net/ipv4/ip_forward
+# By default the value in this file is set to 0, meaning no forward
+# Set this to 1 and you should see the pings go through
+# To make this setting persistent after a reboot modify the value net.ipv4.ip_forward in the /etc/sysctl.conf file
+
+
+## TAKE AWAYS COMMANDS
+
+# list and modify interfaces on the host
+ip link
+
+# see the ip address assigned to the interfaces
+ip addr
+
+# set the ip address on the interfaces. Temporary change, for persistent change see /etc/network/interfaces file
+ip addr add 192.168.1.10/24 dev eth0
+
+# view routing tabel
+ip route
+route
+
+# add a routing table entry
+ip route add 192.168.1.0/24 via 192.168.2.1
+
+# check if IP forwarding is enabled on a host
+cat /proc/sys/net/ipv4/ip_forward
