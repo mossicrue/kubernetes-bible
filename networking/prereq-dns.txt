@@ -1,0 +1,222 @@
+### NETWORK PREREQUESITES - DNS ###
+
+## NAME RESOLUTION
+# We have 2 systems A (IP 192.168.1.10) and B (IP 192.168.1.11), both part of the same network 192.168.1.0
+# Ping is working from A to B and viceversa using their IP addresses
+# You know that B has a database services on them, so you give the name "db" at B
+# From now you want to ping the hosts using the name db instead of its IP address
+ping db
+ping: unknow host db
+
+## How to fix that?
+# Basically you want to tell the system that System B at IP 192.168.1.11 has a name db
+# We want to tell system A that when I say db I mean the IP 192.168.1.11
+# You can do by adding an entry in the /etc/hosts file
+cat /etc/hosts
+192.168.1.11    db
+
+# ping db now will work as the system will translate db with the address 192.168.1.11
+# NOTE: What we put in the /etc/hosts file is assumed from host A as source of truth, but can't be the truth
+# Host A doesn't check if system B actual name is db
+# For example, running a "hostname" command on B reveal that its real name is host-2
+# Host A doesn't care of it, he use what is on the host file
+# You can even fool system A making belive that System B is Google, just add an entry in the /etc/hosts file
+cat /etc/hosts
+192.168.1.11    db
+192.168.1.11    www.google.it
+
+# We have now 2 entries pointing to the same IP and we can use booth of them to reach system B
+# We can have as many names as we want for as many servers as we want in the /etc/hosts file
+# Everytime system A need to ping (or ssh, telnet, curl, etc) a system it looks into its /etc/hosts file to find out the IP address of that host
+# Traslating hostname to Ip address with this name is known as named resolution
+
+# In a small netowrk of few systems you can easily get away with the entrys in the /etc/hosts file
+# On each system I specify which are the other systems in the environment, and that is how it was done in the past
+- System A or "web" /etc/hosts
+192.168.1.10      web
+192.168.1.11      db
+192.168.1.12      nfs
+
+- System B or "db" /etc/hosts
+192.168.1.10      web
+192.168.1.11      db
+192.168.1.12      nfs
+
+- System C or "nfs" /etc/hosts
+192.168.1.10      web
+192.168.1.11      db
+192.168.1.12      nfs
+
+
+# When the environment grows and the /etc/hosts file gain a lot of entries, managing all /etc/hosts becomes hard
+# If one of the servers IP change, we need to modify its entry in all the other hosts
+# That's why we decided to move all theese entries into a single server who will manage it centrally
+# This server is now a DNS server
+
+## How do we specify systems to point on DNS server instead of searching in /etc/hosts file?
+# Our DNS has IP 192.168.1.100 and every host has a DNS resolution configuration file in /etc/resolv.conf
+cat /etc/resolv.conf
+nameserver      192.168.1.100
+
+# Now every time a host comes up across a hostname that it does not know about, it looks it up from the DNS server
+# If a system change IP, update the dns entry in the dns server and all the system will resolve them correctly
+# Having a dns server doesn't mean you can't have entries in the hosts file
+
+
+## What happen if you have a resolution entry in both places? One in your /etc/hosts file and one in the DNS?
+- /etc/hosts entry: 192.168.1.115      test
+-        dns entry: 192.168.1.116      test
+# In this case, the host will first look in the local /etc/hosts file and then looks at the dns server
+# If you finds the entry in the local /etc/hosts file it will use that
+# If not, it looks for that host in the DNS server
+
+# This order can be changed, in fact is defined in the /etc/nsswitch.conf file, at the "hosts" entry
+hosts: file dns
+# As you can see the order is first file and then dns
+# file is referred to /etc/hosts file while dns is referred to dns server
+
+
+## What happen if I ping a hosts that isn't defined both on /etc/hosts and dns, like facebook?
+ping facebook.com
+ping: facebook.com: Temporary failure in name resolution
+
+# We can add a new nameserver that knows Facebook like Google public DNS at 8.8.8.8
+cat /etc/resolv.conf
+nameserver      192.168.1.100
+nameserver      8.8.8.8
+
+# You have to do this add on the resolv.conf file for every hosts in the network
+# To solve this you can add a forward rules for all the name that aren't present on the dns servers
+
+
+## DOMAIN NAMES
+# Is the format that website use to be known on the public internet
+# It is divided in 3 part separated by dot to allow site to be grouped
+www.google.com
+
+## Top Level Domain
+# Is the last part of the domain name, like .com, .edu, .org
+# Represent the intent of the website like
+- .com is for commercial or general purpose
+- .edu for educational organizations, like school website
+- .org for non-profit organizations
+
+# Or the nationality of the domain, like .it, .fr, .uk, etc
+- .it is for Italian domains
+- .fr is for France domains
+- .uk is for England domains
+
+# let's take for example www.google.com
+- .com is the top level domain
+- google is the domain name assigned to Google Inc
+- www is a subdomain
+
+
+## Subdomains
+# Subdomain helps to groups website functionality together
+# Under Google, for example, Google Maps service is available at maps.google.com, "maps" is the subdomain
+# Google Drive cloud storage service is available at drive.google.com, the subdomain is "drive"
+# GMail service is available at mail.google.com
+# Google Suite is available at apps.google.com or gsuite.google.com
+
+# Is it possible to divide each of this subdomain into as many subdomains based on your needs
+
+## PUBLIC DOMAIN NAME RESOLUTION
+# When you try to ping maps.google.com from your sistem, you will first ask to the organization internal dns that it doesn't know who maps or Google is, it will so forward your request to the internet
+# On the internet, the IP address of the server serving maps.google.com maybe resolve it with the help of multiple DNS servers
+# A root dns server looks at your request and points you to a server serving .com domains
+# The .com dns server looks at your request and forwards you to Google
+# Google's dns server provides you the IP of the server serving the Google Maps application
+
+# In order to speed up all future results, your organization dns server may choose to cache this IP for a period of time, typically a few seconds up to a few minutes
+# In that way it doesn't have to go through the whole process again each time
+
+
+## PRIVATE DOMAIN NAME RESOULTION
+# Your organization can have a similiar structure to, for example, your organization could be called as mycompany.com and have multiple subdomains for each purpose:
+- www.mycompany.com for external facing website
+- mail.mycompany.com for accessing your organization's mail
+- pay.mycompany.com for accessing payroll application
+- drive.mycompany.com for accessing cloud storage of your application
+
+# All of this entry are internally configured in your dns server
+192.168.1.10      web.mycompany.com
+192.168.1.11      db.mycompany.com
+192.168.1.12      nfs.mycompany.com
+192.168.1.13      web-1.mycompany.com
+192.168.1.14      sql.mycompany.com
+
+# The reason we discussed all of this is to understand another entry in the /etc/resolv.conf file
+# If we try to ping web now the operation fails, because we are trying to ping "web", but there is no record with the name "web" on the dns, instead is web.mycompany.com
+# How to configure dns to allow a system to ping "web" to be translated in ping "web.mycompany.com"?
+# Add the search entry in the /etc/resolv.conf of the system
+cat /etc/resolv.conf
+nameserver        192.168.1.100
+search            mycompany.com
+
+# Next time you try to ping web, you will see it actually tries web.mycompany.com
+# Dns is smart, if you ping web.mycompany.com it will not add "mycompany.com" domain to the ping
+# It's possible to add multiple search domain, like for example environment domain
+cat /etc/resolv.conf
+nameserver        192.168.1.100
+search            mycompany.com  lab.mycompany.com
+
+So when I say web it would be translated "web.mycompany.com" or "web.lab.mycompany.com"
+
+
+## DNS RECORD TYPE
+# How a record is stored in dns server?
+
+Type      Name                IP Address
+A         web-server          192.168.1.1
+AAAA      web-server          2001:0db8:85a3:0000:0000:8a2e:0370:7334
+CNAME     food.web-server     eat.web-server, hungry.web-server
+
+- A type records are for standard IP or IPV4 dns record
+- Quad-A type records for IPv6 dns record
+- CName record maps one name to another name
+
+# CNAME Example
+# You may have multiple aliases for the same application, like a food delivery service may also be reached at eat or hungry. That's where a CName record is used: Name to name mapping
+
+
+## DNS Resolution Tool
+
+## NSLookup
+# You can use nslookup to query an hostname from a DNS server
+nslookup www.google.com
+Server:     8.8.8.8
+Address:    8.8.8.8#53
+Non-authorative answer:
+Name:  www.google.com
+Address: 172.217.0.132
+
+# NOTE: nslookup don't consider the content of /etc/hosts file
+
+
+## Dig
+# Dog is another useful tool to test DNS name resolution, it returns more details in a similar form as is stored on the server
+dig www.google.com
+; <<>> DiG 9.16.1-Ubuntu <<>> www.google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17935
+;; flags: qr rd ra; QUERY: 1, ANSWER: 6, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;www.google.com.                        IN      A
+
+;; ANSWER SECTION:
+www.google.com.         30      IN      A       172.217.203.99
+www.google.com.         30      IN      A       172.217.203.147
+www.google.com.         30      IN      A       172.217.203.103
+www.google.com.         30      IN      A       172.217.203.105
+www.google.com.         30      IN      A       172.217.203.104
+www.google.com.         30      IN      A       172.217.203.106
+
+;; Query time: 4 msec
+;; SERVER: 10.96.0.10#53(10.96.0.10)
+;; WHEN: Wed Sep 23 20:00:35 UTC 2020
+;; MSG SIZE  rcvd: 223
