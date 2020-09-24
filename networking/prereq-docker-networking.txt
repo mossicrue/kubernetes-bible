@@ -1,0 +1,111 @@
+### NETWORK PREREQUESITES - DOCKER NETWORKING ###
+
+# Let's start with a single Docker Host: a server with docker install on it
+# It has an ethernet interface at eth0 that connects to the local network with the IP 129.168.1.10
+# When you run a container you have different networking options to choose from
+
+## None Network
+docker run --network none nginx
+# With the None network options, the container is not attached to any network
+# Container cannot reach the outside world and no one from the outside can reach the container
+# Multiple container in the same host that are created with None network can't talk to each other
+
+
+## Host Network
+docker run --network host nginx
+# The container is attached to the host's network, no network isolation between host and container
+# If you deploy a web application listening on port 80 in the container, then we web application is available on port 80 on the host without having to do any additional port mapping
+
+# If you try to run another instance of the same container that listens on the same port it won't work
+# They share hosts networking and two processes cannot listen on the same port at the same time
+
+
+## Bridge Network
+docker run --network bridge nginx
+# In this case an internal private network is created with the docker host and containers attach to.
+# The internal network has an address 172.17.0.0 by default
+# Each device connecting to this network get their own internal private network address on this network
+- Container A: 172.17.0.2
+- Container B: 172.17.0.3
+
+
+## How Docker manage bridge network?
+# When Docker is installed on the host it creates an internal private network called bridge bu default
+docker network ls
+NETWORK ID          NAME          DRIVER          SCOPE
+2b60087261b2        bridge        bridge          local
+# But on the hosts the network is called docker0 as you can see from the "ip link" command
+
+# Docker internally uses a technique similar to what we saw in the video on namespaces by running
+ip link add docker0 type bridge
+
+"docker ls" bridge network is the docker0 network on the "ip link" on the host
+
+# docker0 network is a switch in the namespaces that has assigned IP to 172.17.0.1
+# docker0 interface are DOWN on ip link
+
+# when a container is created, Docker creates a network namespace for it just how we created network namespaces before
+# run "ip netns" will show a network namespace called "b3165c10a92b"
+# The namespaces name starts with b3165
+# you can see the namespace associated with each container in the output of "docker inspect" command
+docker inspect 942d70e585b2
+"NetworkSettings": {
+    "Bridge": "",
+    "SandboxKey": "/var/run/docker/netns/b3165c10a92b",
+
+
+# NOTE: A container and a network namespaces means the same
+# NOTE: Container refers to the network namespace created by Docker for that container
+
+# How does Docker attach the container to the bridge network?
+# It creates a virtual cable with 2 interfaces on each end
+# running the ip link command will show one end of the interface which is attached to the local bridge Docker0
+ip link
+8: vethbb1c34@if7 <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0
+
+# running the same command again this time with -n option with the namespace, then it list the other end of the virtual cable in the container namespace
+ip -n b3165c10a92b
+7: eth0if8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group DEFAULT
+
+# The interface also get an IP assigned of the network
+ip -n b3165c10a92b addr
+# The container will get assigned with 172.17.0.3
+# You can also view this by attaching to the container and looking at the IP address assigned to it
+
+
+# This procedure is followed every time a new container is created
+- Docker creates a namespace
+- Create a pair of interfaces
+- Attaches one end to the container
+- Attaches the other end to the brigde network
+
+# Interfaces pair can be found by their name: odd and even former pair: 9 and 10 are one pair, 7 and 8 another pair and 11 and 12 are another one
+# Containers are all part of the network now and they can all communicate with each other
+
+
+## Docker Port Mapping
+docker run nginx
+# Let us look at port mapping now.
+# The container we created is a nginx, so it's a web application serving web page on port 80
+# Since our container is in a private network inside the host only the other containers in the same network  or itself can access to theese web page
+curl http://172.17.0.3:80
+- from a container or the host itself -> Welcome to nginx!
+- from the host -> curl: (7) Failed to connect... No route to host
+
+# To allow external users to access teh applications hosted on containers docker provides a port publishing or port mapping option
+# When you run containers tell Docker to map port 8080 on the Docker host on port 80 on the container
+docker run -p 8080:80 nginx
+# Now you could access the web application using the IP of the docker host and port 8080
+# Any traffic to port 8080 on the docker host will be forwarded to port 80 on the container
+curl http://192.168.1.10:8080
+Welcome to nginx!
+
+# How does docker forward traffic from one ort to another? Docker create a NAT rule for that
+# Docker create an entry into the NAT table of the Docker chain appending a rule that change the destination port from 8080 to the IP destination with port 80
+iptables -t nat -A DOCKER -j DNAT --dport 8080 --to-destination 172.17.0.3:80
+
+# You can see the rules docker creates when you run
+iptables -nvL -t nat
+Chain DOCKER
+target      prot  opt  source       destination
+DNAT        tcp   --   anywhere     anywhere          tcp dpt:8080 to:172.17.0.2:80
