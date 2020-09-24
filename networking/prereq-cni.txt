@@ -1,0 +1,41 @@
+### NETOWRK PREREQUESITES - CONTAINER NETWORK INTERFACE ###
+
+# Need to define some standard to use when creating a program that can manage networking by talking to Docker, Kubernetes, RKT etc
+# Stanrdards like "How a prorgram should look" or "How container runtime will invoke them" so that everyone can adhere to a single set of standards and develop solutions that work across runtime
+
+# That's where Container Network Interface (CNI) comes in.
+# The CNI is a set of stanrdards that define how programs should be developed to solve networking challenges in a container runtime environment
+# The programs are referred to as plugins and CNI tells how the plugin should be developed and how container runtimes should invoke them
+# CNI define a set of responsibilities for container runtime and plugin
+
+# For container runtimes CNI specifies that it is responsible for:
+- creating a network namespace for each container
+- identify the network the container must attach to
+- invoke Network Plugin when a container is created using the ADD command
+- invoke Network Plugin when a container is removed using the DEL command
+- specify how to configure a network plugin on the container runtime environment using a JSON file
+
+# For plugin side, CNI specifies that the plugin
+- must support command line arguments ADD, DEL, CHECK command line arguments
+- must support parameters like container and netowrk namespaces
+- must take care of assigning IP addresses to the PODS and any associated routes required
+- must return results in a specific format
+
+# CNI comes with a set of supported plugins already. Like bridge, vlan, ipvlan, macvlan, dhcp and host-local
+# There are other plugins available from third party organization as well like: Weave, Flannel, Cilium, Vmware NSX, Calico etc
+# All container runtimes like kubernetes, mesos or rkt can work with thee plugins a part from Docker
+# Docker does not implement CNI, it implements its own set of standards known as CNM (Container Network Model)
+
+# You can't run a docker container and specify the network plugin to use if cni
+# This doesn't mean you can't use Docker with CNI at all, you have to workaround it yourself
+
+# For example this forbidden command
+docker run --network=cni-bridge nginx
+# is splitted in 2:
+- create a container with none network
+docker run --network=none nginx
+- manually invoke the bridge plugin yourself
+
+# This is pretty much how kubernetes does it
+# When Kubernetes creates docker containers it creates them on the none network
+# It then invokes the configured CNI plugins who takes care of the rest of the configuration
