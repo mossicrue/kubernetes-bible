@@ -1,0 +1,16 @@
+### NETWORKING CLUSTER NODES ###
+
+# A Kubernetes cluster consists of master and worker nodes
+# Each node must have at least 1 interface connected to a network
+# Each interfaces must have an address configured
+
+# The hosts must have a unique hostname set as well a unique MAC address
+# You should note this especially if you created the VMs by cloning from existing ones
+# There are some ports that must be open because used by the various components in the control plane
+- master should accept connections on 6443 for the API server
+- kubelet, both on master and workers node listen to 10250 port
+- kube-scheduler requires port 10251
+- kube-controller-manager requires 10252
+- worker nodes expose services for external access on ports 30000 to 32767
+- etcd server listens on port 2379
+- in case of multiple master, you need 2380 so ETCD clients can communicate with each other
