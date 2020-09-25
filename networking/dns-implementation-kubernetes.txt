@@ -1,0 +1,72 @@
+### DNS KUBERNETES IMPLEMENTATION ###
+
+# We have 2 pods with 2 addresses and the cluster dns server
+- test pod with 10.244.1.5
+- web pod with 10.244.2.5
+- dns server with IP 10.96.0.10
+
+# The central kubernetes DNS server store the two /etc/hosts entries of the pod
+web     10.244.2.5
+test    10.244.1.5
+
+# On the pods is added the nameserver entry in their /etc/resolv.conf file
+cat /etc/resolv.conf
+nameserver    10.96.0.10
+
+# Everytime a pod is created we
+- add its dns entry in the dns server so other pods can access the new pod
+- configure the /etc/resolv.conf file in the new POD so it can reach the other pods
+
+# In the dns are stored both services and pod dns records
+# For service record kubernetes store the name with the ip
+# For pods, it forms the hostname by replacing dots of the IP addresses with dashes
+
+# Kubernetes version < 1.12 the dns implemented was kube-dns
+# From Kubernetes 1.12 the recommended DNS server is CoreDNS
+
+
+## CoreDNS in Kubernetes
+# CoreDNS server is deployed as a replicaset of 2 pods in the kube-system namespace of the kubernetes cluster
+# In this example we assume that CoreDNS is a single pod
+# CoreDNS require a configuration file called /etc/coredns/Corefile
+ 1| .:53 {
+ 2|     errors
+ 3|     health
+ 4|     kubernetes cluster.local in addr.arpa ip6.arpa {
+ 5|         pods insecure
+ 6|         upstream
+ 7|         falltrhough in-addr.arpa ip6.arpa
+ 8|     }
+ 9|     prometheus :9153
+10|     proxy . /etc/resolv.conf
+11|     cache 30
+12|     reload
+13| }
+
+# In this file you have a number of plugins configured for handling errors, reporting health, monitoring metrics, cache, etc
+# The plugin that makes CoreDNS works with Kubernetes is the Kubernetes plugin (line 4)
+# In the Corefile is defined also the root domain cluster.local (line 4)
+# By default kubernetes doesn't store pod address but it can be enabled with the entry in line 5
+# Any recrd taht this DNS server can't solve, for example a POD that try to reach www.google.com it is forwarded to the nameserver specified in the coredns pods /etc/resolv.conf file
+
+# This Corefile is passed into the CoreDNS pod has a configMap object
+# In that way you can edit this ConfigMap object to modify the configuration file
+
+
+## What address we use on a POD to point to the DNS server?
+# When CoreDNS is deployed on the cluster it also creates a ClusterIP service called kube-dns to make available to other components in the cluster
+# The IP address of this service is configured as nameserver in the /etc/resolv.conf ot the pods
+# pods resolv.conf configuration is maded by default by kubernetes when a pod is created
+
+# resolv.conf file also has a search entry with multiple value setted to it that are
+cat /etc/resolv.conf
+nameserver    10.96.0.10
+search        default.svc.cluster.local svc.cluster.local cluster.local
+
+# This allows to find the service using any name:
+- web-service
+- web-service.default
+- web-service.default.svc
+- web-service.default.svc.cluster.local
+
+# NOTE: in the search is not present the pod.cluster.local or default.pod.cluster.local so to lookup for a pod you must always use the FQDN name
