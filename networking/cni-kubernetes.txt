@@ -1,0 +1,54 @@
+### CONTAINER NETWORKING INTERFACE (CNI) IN KUBERNETES ###
+
+# In kubernetes, CNI, is responsible for:
+- creating container network namespaces
+- identifying and attaching those namespaces to the right network calling the right plugin
+
+# How to specify which CNI plugins Kubernetes have to use?
+# CNI Plugin must be invoked by the component in Kubernetes that is responsible for creating containers
+# CNI plugin is configured in the kubelet service on each node in the cluster and it explicit in the ps -aux process
+--netowrk-plugin=cni
+--cni-bin-dir=/opt/cni/bin
+--cni-conf-dir=/etc/cni/net.d
+
+# CNI bin directory has all the supported CNI plugins as executables
+# CNI config directory as a set of configurations files where Kubelet can see which plguin to use
+
+ls /etc/cni/net.d
+10-bridge.conf
+# In this case it finds the bridge configuration file
+# In case of multiple files, kubelet will read files in alphabetical order
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
