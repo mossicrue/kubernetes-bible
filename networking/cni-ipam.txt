@@ -1,0 +1,30 @@
+### CNI IPAM - IP ADRESS MANAGEMENT ###
+
+# How the virtual bridge network and the nodes assigne an IP subnet and how a POD assigned an IP
+# Where is this information stored and who is responsible for ensuring there are no duplicate IP assigned
+
+## Who assign IP to the POD?
+# From CNI the network plugin is responsible to assign IP to PODs in a consistent way
+
+## How we manage these IPs?
+# Kubernetes doesn't care how we do it
+# We just need to making sure we don't assign any duplicated IP and manage them properly
+# An easy way to do it is to store the list of IPs in the file and make sure we have necessary code in our script to manage this file properly
+# CNI helps us also by bring us 2 built-in plugins to which you can outsource this task to
+# For managin IP addresses locally on each host you can use the host-local plugin but is still our responsibility to invoke that plugin in our script
+
+# We can make also our script dynamic in order to support more network plugin
+# The CNI configuration file has a section called APM in which we can specify the type of plugin, the subent and the routes to use
+"ipam": {
+  "type": "host-local"
+  "subnet": "10.244.0.0/16"
+  "routes": [
+    { "dst": "0.0.0.0/0" }
+  ]
+}
+
+
+# Let's see how weave works managing IP addresses
+# Weave by default allocates the IP range 10.32.0.0/12 for the entire network
+# IP range goes from 10.32.0.1 to 10.47.255.254, about 1 million IP to be used
+# Peers split the IP adresses equally between them and assign one portion to each node

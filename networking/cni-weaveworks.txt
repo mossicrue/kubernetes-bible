@@ -1,0 +1,51 @@
+### WEAVEWORKS CNI ###
+
+# Weaveworks weave is a CNI plugin
+# Think of Kubernetes cluster as a company.
+# Nodes are the different office sites
+# We have different departements on each site
+# And we have different offices (POD) in each dept
+
+# Someone in office-1 want to send a packet to office-3 and hands it over to the office boy
+# All what he knows is it needs to go to office 3 and he doesn't care who or how is it transported
+# Office boy takes the package, get in his car, looks up address of the target office in GPS, uses directions and finds his way to the destination site, delivers the package to payroll department who intern forward the package to office-3
+
+# This works fine for now, but we soon expands on different regions and countries and this process no longer works
+# It's hard for the office boy to keep track of so many routes to these large number of offices across different countries and he can't drive to these offices by himself
+# That's why we decide to outsource all mailing and shipping activities to a company who does it best.
+
+# First things the shipping company do is to place shipping agent in each company sites
+# These agents are responsible for managing all shipping activities between sites
+# They also keep talking to each other and are well connected so they all know about each other's sites and departements or office inside them
+
+# Now when a package is sent from office-10 to office-3
+- the shipping agent in that site intercepts the packages and looks at the target office name
+- He knows exactly in which site and department that office-3 is in through his little internal network with his peer on the other sites
+- He place this packages into his own new package with the destination address said to the target sites location and then send the packages through
+- Once the package arrives at destination it is again intercepted by the agent on that site
+- He opens the packet retrieves the original packet and delivers it to the right department.
+
+
+# Back in kubernetes, when you deploy Weave plugins on the cluster, it deploys an agent or service on each node
+# They communicate with each other to exchange information regarding the nodes and networks and PODs within them
+# Each agent or peer stores a topology of the entire setup, so they know the pods and their IPs on the other nodes
+# Weave creates its own bridge n the nodes and names it "weave" then assign IP address to each network
+
+# NOTE: A single pod may be attached to multiple bridge networks
+# For example you could have a pod attached to the weave bridge as well as the docker bridge created by docker
+# What path a packet takes to reach destination depends on the route configured on the container
+# Weave makes sure that PODs get the correct route configured to reach the agent and the agent then takes care of other PODs
+
+# Now when a packet is sent from one pod to another node, weave intercepts the packet and identifies that it's on a separated network
+# It then encapsulates this packet into a new one with new source and destination and sends it across the network
+# One in the other side, the other weave agent retrieves the packets, decapsulates and routes the packet to the right POD
+
+
+## How to deploy Weave on a Kubernetes Cluster?
+# Weave and weave peers can be deployed as services or daemons on each node in the cluster manually or if kubernetes are setted up already then an easier way to do that is to deploy it as pods in the cluster
+# Once the base kubernetes system is ready with nodes and networking configured correctly between the nodes
+# And the basic control plane components are deployed, weave can be deployed in the cluster with a single "kubectl apply" command
+kubectl apply -f "http://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+# This deploys all the necessary components required for weave in the cluster
+# Weave peers are deployed as deamonsets, so 1 pod of weave peer are ensured to be on each node
