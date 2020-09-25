@@ -1,0 +1,76 @@
+### POD NETWORKING ###
+
+# As for now we have deployed several master and worker nodes and set up their network so they can reach each other
+# We also made sure that firewall and network security groups are configured correctly to allow kubernetes control plane components to reach each other
+# Assume that we have also setup all the kubernetes control plane components like kube-api server, etcd server, kubelet etc and we are finally ready to deploy our applications
+
+# Before we can do that there is something we must address
+# There is a layer of networking crucial to the clusters functioning and that is the networking at the pod level
+# Our kubernetes cluster is soon going to have a large number of PODs and services running on it
+# How the pods are adresseed and how they communicate with each other?
+# How do you access to the services running inside and outside the cluster?
+
+
+## POD Networking Model
+# kubernetes expect you to implement a network solution for this by providing also a neworking model that says:
+- Every POD should have unique IP Address
+- Every POD should be able to communicate with every other POD in the same node
+- Every POD should be able to communicate with every other POD on the other nodes without NAT
+
+# There are many networking solutions availabe out there that does these but it's possible to solve also with pure basic network command line istruction like, route and iptables
+
+
+## Practical Implementation Example
+# We have 3 node cluster
+- Node1 -> 192.168.1.11
+- Node2 -> 192.168.1.12
+- Node3 -> 192.168.1.13
+
+# Next step, When containers are created, kubernetes creates network namespaces for them
+# To enable communication between them we attach theese namespaces to a network, but what network?
+# To a bridge network that we have to create on each node and them briged them up
+
+# Now we need to assign an IP address to the bridge interfaces
+# Each bridge will has its own subnet
+- Bridge Node1 -> v-net-0 with IP 10.244.1.0/24
+- Bridge Node2 -> v-net-0 with IP 10.244.2.0/24
+- Bridge Node3 -> v-net-0 with IP 10.244.3.0/24
+
+## Pod Network Script
+# Create and attach a container to the network with a pipe or virtual cable
+# Assign IP address to the POD and add the route to default gateway
+# Bring up the interfaces
+
+# Now POD can communicates each other in the same node
+
+## How to make POD on a node to communicate with a POD on another node
+# Pod 10.244.1.2 on Node1 wants to ping POD 10.244.2.2 on Node2
+# As for now it doesn't ping because the pods are on different network
+# Node1 doesn't know that 10.244.2.0 is a private Network on Node2
+# To permit taht we add a route to Node1 routing table that will route traffic to 10.244.2.2 via seconds nodes IP at 192.168.1.12
+ip route add 10.244.2.2 via 192.168.1.12
+
+# Similarly we configure route on all hosts to all other hosts with information regarding the respective network in them
+# Example for node1
+ip route add 10.244.2.2 via 192.168.1.12 --> route to pod on node2
+ip route add 10.244.3.2 via 192.168.1.13 --> route to pod on node3
+
+# Example for node2
+ip route add 10.244.3.2 via 192.168.1.13 --> route to pod on node3
+io route add 10.244.1.2 via 192.168.1.13 --> route to pod on node1
+
+# This works fine for simple architectures
+# Instead of configure route on each nodes you can configure them in a router if you have one in your network and point all host to use that as the default gateway
+
+
+
+
+
+
+
+
+
+
+
+
+#
