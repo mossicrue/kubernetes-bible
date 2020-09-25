@@ -1,0 +1,83 @@
+### SERVICE NETWORKING ###
+
+# If you have a pod to access services hosted on another pod you would always use a service
+# Quick type of services:
+
+## CLUSTER IP
+# To make accessible orange pod from blue pod, we create orange service
+# Orange service gets an IP address and a name assigned to it
+# Blue pod can now access the orange pod through the orange services IP or its name
+
+# Blue and orange pod are on the same node, what about pod on different nodes?
+# When a service is created, it is accessible from all parts of the cluster
+# While a pod is hosted on a node, a service is hosted across the cluster
+# NOTE: Cluster IP Service is not accessible from outside the cluster
+
+
+## NODE PORT
+# Purple pod hosts a web applications that we want to be accessible outside the cluster
+# We create a NodePort service, that has its own IP too
+# It is accessible from all the PODs using this IP, like Cluster IP
+
+# In addition the NodePort expose an applications on a specified port on all the nodes in the cluster
+# With this way external users or service can access our web application
+
+# Who is making services accessible to the outside with Node Port or availabe for all the pods with Cluster IP
+# How it is making this?
+# Let's start with 3 node cluster with no pods or services yet,
+# We know that every kubernetes node runs a only the 3 kubelet process, responsible for creating each PODs
+# Each Kubelet service on each node watch the changes in the cluster through the kube-api server
+# Every time a new Pod is to be created, it creates the POD on the nodes and then invokes the CNI plugin to configure network for that Pod
+
+# Similarly, each node runs anotehr component known as kube-proxy
+# Kube-proxy watches the changes in the cluster through kube-api server and every time a new service is to be created, kube-proxy get into action
+# Depsite POD, Services are cluster wide concept, so they aren't deployed on a particular node, they exist across all the nodes in the clusetr
+# As a matter of fact, they don't exist at all: there is no server or service really listening on the UP of the service
+# We have seen that PODs have containers and containers have namespaces with interfaces and Ips assigned to those interfaces
+
+# With Services is not like this, it's a virtual object
+# So, how do they get an IP and how we are able to access the application on the pod throgh service?
+# When we create a service object in kubernetes, it is assigend an IP address from a pre-definied range
+# The kube-proxy components running on each node, get that IP address and create forwarding rules on each node in the cluster
+# Rules say that any traffic coming to the IP of the service should go to the IP of the POD
+# Once that is in place, whenever a POD tries to reach the IP of the service, it is forwarded to the PODs IP Address, accessible to any node in the cluster
+# NOTE: It's not just an IP, it's an IP and Port combinations
+# When a service is created or deleted, kube-proxy creates or deletes these rules
+
+# How are these rules created?
+# Kube proxy supports different ways, such as
+- userspace: kube-proxy listen on a port for each service and proxies connections to the pods
+- IPVs
+- iptables, default options
+
+# Proxy mode is setted while configuring the kube-proxy service by ruuning
+kube-proxy --proxy-mode [userspace | iptables | ipvs]
+# If this it's not set, the default mode is "iptables"
+
+
+## How iptables are configured on the nodes by kube-proxy and how you can view them on the nodes
+# We have a pod named db on node01
+# POD has IP 10.244.1.2
+
+# We create a service of type Cluster IP called db-service to make this pod available in the cluster
+# When the service is created kubernetes assign them the IP 10.103.132.104
+# The range of ip is specified in the kube-api-server options called service-cluster-ip-range which is default set to 10.0.0.0/24
+# In this case it's not like this, to see the range, from the master node run
+ps aux | grep kube-api-server
+# and looks for the --service-cluster-ip-range options, that is setted to 10.96.0.0/12
+# Service IP can go from 10.96.0.0 to 10.111.255.255
+# NOTE: Pod Network range was 10.244.0.0/16 which gives to pods addresses from 10.244.0.0 to 10.244.255.255
+# You can set any range you want for both Pods and Services network, but they can't overlap
+
+# To list the earlier created iptables for the db-services
+iptables -L -t net | grep 'db-service'
+KUBE-SVC-XA5OGUC7YRHOS3PU  tcp  --  anywhere  10.103.132.104  /* default/db-service: cluster IP */ tcp dpt:3306
+DNAT                       tcp  --  anywhere  anywhere        /* default/db-service: */ tcp to:10.244.1.2:3306
+KUBE-SEP-JBWCWHHQM57V2WN7  tcp  --  anywhere  anywhere        /* default/db-service: */
+
+# All the rules created by kube-proxy have a comment with the name of the service on it
+# These rules mean: any traffic goint to IP address 10.103.132.104 on port 3306 (port of db service) should have its destination address changed to 10.244.1.2 and port 3306 which is the IP of the POD
+
+# When you create services of type NodePort, kube-proxy creates IP Tables rules to forward all traffic coming on a port on all nodes to the respective backend PODs
+
+# Entries creations are logged on /var/log/kube-proxy.log
