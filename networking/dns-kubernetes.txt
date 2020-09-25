@@ -1,0 +1,54 @@
+### DNS IN KUBERNETES ###
+
+# We have 3 nodes on the cluster with some pods and services deployed on them
+# Each name has a nodename and IP address assigned to it
+- node1 -> node1.kubecluster.org  --  192.168.1.11
+- node2 -> node2.kubecluster.org  --  192.168.1.12
+- node3 -> node3.kubecluster.org  --  192.168.1.13
+
+# Node name and IP addresses of the cluster are probably registered in a DNS server in your organization
+# Kubernetes DNS is strictly for all the kubernetes component like pods and services
+
+# Kubernetes deploy a built-in dns server by default when you setup a cluster
+# Let's start with 2 pods and a services
+- "test" pod with IP 10.244.1.5
+- "web" pod with IP 10.244.2.5
+- "web-service" pod with 10.107.37.188
+
+# We are assuming that all the pods and services can reach each other using their IP addresses
+# To make the web pod accessible we create a services that we called "web-service"
+# Whenever a service is created, the kubernetes DNS service creates a record for the service
+# It maps the service name to the IP address
+
+# From now we can reach "web" pod using the "web-service" name
+curl http://web-service -> Welcome to NGINX!
+
+# Since the 2 pods and the service are all in the default "default" namespaces "test" pod can reach "web" pod by using only the service name "web-service"
+
+# Let's assume now that the "web" pod and "web-service" service are in a different namespaces called "apps"
+# Then, to access to "web-service" from the default namespace we have to curl web-service.apps
+curl http://web-service.apps -> Welcome to NGINX!
+# All pods and services for a namespaces are grouped togheter in a sudomain with the name of the namespace
+
+# All the services of all namespaces are grouped in another subdomain called svc
+# Now you can reach the web pods by curling this url
+curl http://web-service.apps.svc -> Welcome to NGINX!
+
+# Finally all the services and PODs are grouped togheter into a root doamin for the cluster, which is cluster.local by default, so here is a curl to a service with its fqdn
+curl http://web-service.apps.svc.cluster.local -> Welcome to NGINX!
+
+
+# Pods DNS records are not created by default, but we can enable that explicitly
+# Once enabled, record are created for pods as well
+
+# Pod fqdn not use the POD name, but it genereates a name by replacing the dots of IP Address with dashes
+# namespace remains the same and the type is set to pod. root domain is always cluster.local
+# "web" pod has IP 10.244.2.5 so its fqdn would be 10-244-2-5.apps.pod.cluster.local
+curl http://10-244-2-5.apps.pod.cluster.local -> Welcome to NGINX!
+
+# "test" pod has IP 10.244.1.5, its fqdn would be 10-244-1-5.default.pod.cluster.local
+
+
+
+
+#
