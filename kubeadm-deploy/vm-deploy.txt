@@ -1,0 +1,30 @@
+### DEPLOY KUBERNETES VM WITH VAGRANT ###
+
+# Steps for the deploy kubernetes cluster deploy
+1. Have multiple systems or virtual machines provisioned to configure a cluster and choose master and worker nodes
+2. Install a Container Runtime on all the hosts (eg Docker)
+3. Install Kubeadm on all the hosts
+4. Initialize Master Server (install and configure required components)
+5. Check that network prerequisite are met and install Pod Network
+6. Join worker nodes to the master node
+
+
+### 1 - Provision VM
+# Prerequisite: have virtualBox and Vagrant
+# Vagrant is a tool for provisioning vm for kubernetes cluster
+# Most important options:
+- NUM_MASTER_NODE = 1 --> Number of master node vm to deploy
+- NUM_WORKER_NODE = 2 --> Number of worker node vm to deploy
+- IP_NW = "192.168.56." --> Network range for the created vms, set to 192.168.56.0/24
+
+## Vagrant command
+# To be executed in the same path of the vagrant file Vagrantfile
+
+# Check status of vm
+vagrant status
+
+# provision the vm, provisioned with Ubuntu Bionic Beaver 18.4 LTS
+vagrant up
+
+# ssh to a vagrant provisioned vm
+vagrant ssh <vm-name>

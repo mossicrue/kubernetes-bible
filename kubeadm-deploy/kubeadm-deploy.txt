@@ -1,0 +1,66 @@
+### DEPLOY KUBERNETES WITH KUBEADM ###
+
+# Full guide at https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+# Steps for the deploy kubernetes cluster deploy
+1. Have multiple systems or virtual machines provisioned to configure a cluster and choose master and worker nodes
+2. Install a Container Runtime on all the hosts (eg Docker)
+3. Install Kubeadm, kubelet and kubectl on all the hosts
+4. Initialize Master Server (install and configure control plane components)
+5. Check that network prerequisite are met and install Pod Network
+6. Join worker nodes to the master node
+
+
+# We have already set up the nodes
+- 1 master node: master
+- 2 worker nodes: node01 and node02
+
+# Prerequisite on the nodes
+- Have installed the vm
+- Letting iptables see bridged traffic
+
+## 2. Install a Container Runtime on all the host
+# In this case we are installing Docker on Ubuntu, on RHEL systems may change
+- Setup apt to use repository over HTTPS
+- Install Docker official GPG
+- Add Docker apt repository
+- Install Docker
+- Setup Docker Daemon
+- Reload systemd daemon and restart docker
+
+
+## 3. Install kubeadm, kubelet and kubectl
+- Add Kuberentes repository
+- Install kubeadm, kubelet and kubectl
+- Disable from upgrade
+- Configure cgroup driver if Docker isn't the Container Runtime
+
+
+## 4. Initialize Master Server (install and configure control plane components)
+- Set kubeadm for HA (optional)
+- Choose POD network add-on and network IP address range to use for the pod
+- Use master node static ip for apiserver advertise address
+- Run kubeadm init command
+kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address=192.168.56.2
+- Take note of the kubeadm join commands in the output
+- Run the regular user post installation tasks
+      mkdir -p $HOME/.kube
+      sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+      sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+## 5. Deploy a pod network to the cluster
+
+
+## 6. Join worker nodes to the cluster
+- Run the kubeadm join commands on worker nodes to join them to the cluster
+- Test their connection with kubectl get nodes
+# NOTE: If you lost the kubeadm join command you can generate a new token ny running
+kubeadm token create --print-join-command
+
+
+## 7. Installation tests
+- Create test pod with kubectl run nginx --image nginx
+- Destroy the test pod
+
+#
