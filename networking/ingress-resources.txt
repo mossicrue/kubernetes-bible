@@ -1,0 +1,119 @@
+### INGRESS - INGRESS RESOURCES ###
+
+# Ingress resource is a set of rules and configurations applied on the ingress controller
+# You can configure rule to say:
+- Simply forward all incoming traffic to a single application
+
+- Route traffic to different application based on the url
+  * if user visit www.my-online-store.com/wear -> redirect to wear app
+  * if user visit www.my-online-store.com/watch -> redirect to video app
+
+- Route users based on the domain name itself
+  * if user visit wear.my-online.com redirect to wear app
+  * if user visit video.my-online.com redirect to video app
+
+
+# Ingress resource is created with a kubernetes configuration file
+# ingress-wear.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear
+spec:
+  backend:
+    serviceName: wear-service
+    servicePort: 80
+
+# Backend sections defines where the traffic will be routed to
+- serviceName is the service which traffic will be routed to
+- servicePort is the port which traffic will be routed to
+
+# create an ingress entry
+kubectl create -f ingress-wear.yaml
+
+# list all ingress
+kubectl get ingress
+NAME              HOSTS       ADRESS        PORTS
+ingress-wear      *           80               2s
+
+# view info of a ingress rules
+kubectl describe ingress <ingress-rule-name>
+
+
+# You use rules when you want to route traffic based on different conditions
+# For example you create one rule for traffic orginating from eatch domain or hostname
+# That means when users reach your cluster using the domain name my-online-store.com you can handle that traffic using one rule (Rule 1)
+# When users reach your cluster using domain name wear.my-online-store.com you can handle that traffic using a seprate rule
+# When users reach your cluster using domain name watch.my-online-store.com you can handle the traffic using a third rule
+# And then use a fourth rule to handle everything else
+
+# Rules can handle different paths
+# For example, with Rule 1 you can handle
+- http://www.my-online-store.com/wear path to route that traffic to the clothes applications
+- http://www.my-online-store.com/watch path to route that traffic to the video applications
+- A third path that route anything other than the first two to a 404 page
+
+# Similarly Rule2 handle all traffic from wear.my-online-store.com
+- http://wear.my-online-store.com path route traffic to shopping page
+- http://wear.my-online-store.com/return path route traffic to returns page
+- http://wear.my-online-store.com/support path route traffic to support page
+
+# Rule 3 works like Rule 2
+
+# Finally Rule4
+# If accessing on a non described path before, it will load a 404 page
+
+
+## Implementing Ingress Rules based on URL Path
+# Route traffic depending on the URL path
+# ingress-wear-watch.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  namespaces: default
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /wear
+        backend:
+          serviceName: wear-service
+          servicePort: 80
+      - path: /watch
+        backend:
+          serviceName: watch-service
+          servicePort: 80
+
+
+# In Ingress describe output is present an important output section: Default Backend
+# Here is printed which services is called in case Rule1 can't handle the url accessed
+# A good practice is to attach this services to the 404 page of the website
+
+
+## Implementing Ingress Rules based in domains names or hostnames
+# ingress-wear-watch
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+spec:
+  rules:
+  - host: wear.my-online-store.com
+    http:
+      paths:
+      - backend:
+          serviceName: wear-service
+          servicePort: 80
+
+  - host: watch.my-online-store.com
+    http:
+      paths:
+      - backend:
+          serviceName: watch-service
+          servicePort: 80
+
+
+# Not specify host on the rule means that all the incoming traffic is accepted for that rules

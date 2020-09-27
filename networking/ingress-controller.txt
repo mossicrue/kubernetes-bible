@@ -1,0 +1,180 @@
+### INGRESS - INGRESS CONTROLLER ###
+
+## Whats the difference from Ingress and Service?
+
+# Start with a simple scenario
+# We would like to deploy an e-commerce at the site www.my-online-store.com
+# Site is builded as Docker Image and deployed in kubernetes cluster as a deployment called wear
+# Applications need a databse so we deploy a mysql pod with attached a ClusterIP service called mysq-service
+
+# To make the applications accessible from the outside world you create another service
+# The service is a NodePort, is attached to the wear deployment
+# make the website accessible on the port 38080 on the nodes of the cluster
+http://<node-ip>:30080
+
+# This solution works and when traffic to the site grows we increase the number of replica in wear deployment
+
+## ON PREMISE EXPOSURE TO PUBLIC
+# There are other things to do for the applications
+# We don't want user to have to type an IP addres every time, so you configure DNS server to point to the IP on the nodes
+# your users can now access your applications using the URL my-onlune.com:38080
+
+# Also you don't want that users type the port with the url, but node port service allocate ports from port 30000
+# You have to bring in an additional layer between DNS server and cluster like a proxy
+# Proxy will forward request on port 80 to port 38080 on kubernetes cluster nodes
+# You then point DNS to the proxy server
+
+# This is the solution to use if you host the applications on premise in your datacenter
+
+
+## GOOGLE CLOUD PLATFORM EXPOSURE TO PUBLIC
+# Instead of creating a NodePort service for the wear application you could set it to LoadBalancer
+# LoadBalancer does the same things of NodePort: expose service on a high port, 38080 again
+# In addition kubernetes also sends a requests to Google Cloud Platform to provision a network load balancer for this services
+# Receiving the request, GCP automatically deploy a load balancer configured to route traffic to the service ports
+# Load Balancer has an external IP that can be provided to users to access the application
+# In that case we set the DNS to point this IP and users access the application using the URL my-online-store.com
+
+
+## A SECOND SERVICE
+# Now you have a second service to be exposed that is a streaming services available at my-online-store.com/watch
+# And you want to make your old application accessible at my-online-store.com/wear
+
+# Video Streaming application is a completely brand new application that has nothing in common with the previous one
+# The streaming app is deployed as a new deployments on the same kubernetes cluster
+# A new LoadBalancer service called video-service is created
+# Kubernetes provide port at 38282 and a new external network with IP
+# NOTE: having multiple load balancer may become an heavy cost for your business
+
+## SO, How do you redirect traffic betweenn each of theese load balancers based on the URL that the users type?
+# You need another proxy or loadbalancer that can redirect traffic based on URLs to the different services
+# Every time you introduce a new service you have to re-configure the load balancer
+
+# Finally you also need to enable SSL for your applications, so users can access with https
+# Where you configure that?
+# It can be done at different levels, like applications level, or load balencer level or proxy level
+# You want it to configured in one place with minimal maintenance
+
+## INGRESS
+# It would be nice to be maneged all of this in a kubernetes cluster
+# That's where ingress comes in
+
+# Ingress helps your users access your application using a single externally accessible url
+# It is configurable to route different services in the cluster based on the url path
+# Also manage the SSL parts
+# Think of Ingress as a layer7 load balancer built-in to the kubernetes cluster that can be configured using basic kubernetes primitives just like any other objects in kubernetes
+# NOTE: Even if you have an ingress you have to make it accessible outside the cluster
+# So you still have to pubblish it as a node port or with cloud load balancer but only for one time
+# You will do all your load balancing, auth, ssl and url based routing configuration on the ingress controller
+
+
+## HOW INGRESS WORKS
+# WITHOUT Ingress you would have to use a reverse-proxy solutions like NGINX or HAProxy or Traffic
+# Then you have to deploy on the kubernetes cluster and configure to route traffic
+
+# Ingress is implemented by Kubernetes in the same way
+# You first deploy a supported solution (which can be one of the above mentioned)
+# Then specify a set of rule to configure Ingress
+
+# The solution that is deployed is called "ingress controller" and the set of rules are called "ingress resoruces"
+# Ingress resources are created usign definition file like the one we use to create pods, deployment and services
+# NOTE: No Ingress Controller on Kubernetes by default
+
+
+## INGRESS CONTROLLER
+# Which solution we can implement? By today Google Load Balancer (GCE) and NGINX are supported and maintened by Kubernetes project
+# Ingress controllers are not just another nginx serevr, load balancer is only a part of it
+# Ingress controllers have additional intelligience built into them to monitor the kubernetes cluster for new definition or ingress resources and configure the nginx server accordingly.
+# An NGINX Controller is deployed as just another deployment in kubernetes
+# Let's start with a deployment file defintion named nginx-ingress-controller using a special version of nginx
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx-ingress
+  template:
+    metadata:
+      labels:
+        name: nginx-ingress
+    sepc:
+      containers:
+        - name: nginx-ingress-controller
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+      args:
+        - /nginx-ingress-controller
+        - --configmap-$(POD_NAMESPACE)/nginx-configuration
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespaces
+      ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+
+# As you see we have to create a ConfigMap to pass all the options of nginx-ingress-controller
+# ConfigMap object need to don't have any entries at this point
+# The config map helps to set configuration in the future
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-configuration
+
+# You must also pass two environment variables that carry the POD's name and the namespaces it is deployed
+# This environment variables are used to read the configuration data from the POD
+
+# Finally specify the ports used by the ingress controller which happens to be 80 and 443
+
+# We then need a service to expose the ingress controller to the external world
+# So we create a NodePort service with the nginx-ingress label selector to link the service to the deployment
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    name: nginx-ingress
+
+
+# To manage all the changes made by the kubernetes cluster and work properly, ingress controller needs an user with a right set of permission
+# For that we create a service account with the right roles and roles binding
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ingress-serviceaccount
+
+
+# To summarize, with:
+- a deployment of the nginx-ingress image
+- a service to expose it
+- a ConfigMap to feed nginx configuration data
+- a service account with the right perission to access all of this object
+
+# We should be ready with an ingress controller in its simplest form
+
+
+
+
+#
