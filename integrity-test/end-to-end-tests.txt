@@ -1,0 +1,60 @@
+### END TO END TESTS ###
+
+# How to validate and test our kubernetes cluster is proper working
+
+## Manual Test
+- kubectl get nodes --> check nodes health, all nodes must have Status set to Ready
+- kubectl get pods: --> check pods health, all pods Status must be Running
+- kubectl get pods -n kube-system --> check control plane pods health, if deployed as pod
+- service <control-plane-components> status --> check status of services, if control plane deploy "hard way"
+  * kube-apiserver
+  * kube-controller-manager
+  * kube-scheduler
+  * kubelet
+  * kube-proxy
+- check if deployment works well, new pod must have Status set to Running
+  * kubectl run nginx
+  * kubectl get pods
+  * kubectl scale --repliacs=3 deploy/nginx
+  * kubectl get pods
+- try to expose the apps with services, curl of the NodePort must returns "Welcome to NGINX!"
+  * kubectl expose deployment nginx --port=80 --type=NodePort
+  * kubectl get service
+  * curl http://worker-1:31850
+
+
+## KUBETEST
+# Manual test is tedious, Kubetest is created for this, it performs about 1000 different end to end tests
+# Checks are distribuited to ensure health of all the components
+
+# Network End 2 End few tests example:
+- Networking SHOULD function for intra-pod communication (http)
+- Service SHOULD serve a basic endpoint from pods
+- Service endpoints latency SHOULD not be very high
+- DNS SHOULD provide DNS for services
+
+# How a test works
+# Networking SHOULD function for intra-pod communication (http)
+- Prepare: creates a namespace for the test
+- Creates Test Pod in this namespace and wait for the PODs to come up
+- Test: Executes curl on one pod to reach the IP of another over HTTP
+- Record the result
+- Cleanup: Delete the namespace
+
+# E2E tests are about 1000 different test
+# You need to pass the minimum conformance test, approximately 160 test
+
+# Install kubetest
+go get -u k8s.io/test-infra/kubetest
+kubetest --extract=v1.11.3 --> must match installed kubernetes version
+cd $(pwd)/kubernetes
+
+# Run all the test (at least 12 hours)
+# host-local server, provider is skeleton, first exports env variable of kube-master hostname and ip
+export KUBE_MASTER_IP=192.168.26.10
+export KUBE_MASTER=kube-master
+kubetest --test --provider=skeleton > testout.txt
+
+# run a test for a specific section
+kubetest --test --provider=skeleton --test_args="--ginko.focus=Secretes" > testout.txt
+kubetest --test --provider=skeleton --test_args="--ginko.focus=\[Conformance\]" > testout.txt
