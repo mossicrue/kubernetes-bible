@@ -1,0 +1,32 @@
+### APPLICATION FAILURE ###
+
+# How to go for a troubleshooting in case of application failures
+
+## Check Accessibility
+# Let's look at a two tier application:
+- A web server running on a web pod and serving user through web service
+- A database server running on a database pod and serves the web server through database service
+
+# Draw a map or a chart of how the application is configured is a good practice
+DB Pod -> DB Service ---> Web Pod -> Web Service ---> User
+
+## EG: User reports it can't access the application
+
+1. Check of the web server web-service
+- test accessibilty of service by curl of the IP of node-port service using curl
+- look for service details running kubectl describe command
+  * Does it discover a Pod Endpoint?
+  * Does the pod selector matches the pod labels?
+
+2. Check the web pod
+- check the status of the pod
+  * is it running?
+  * how many restart it did?
+- check events of the pod by running kubectl describe pod <pod-name>
+- check logs of the application running kubectl logs <pod-name>
+- if the pod is continuously restarting check why it crash
+  * tail application logs by running kubectl logs -f <pod-name>
+  * check the previous pod logs by running kubectl logs web -f --previous
+
+3. Check the db service status by doing the same step of point 1
+4. Check the db pod status by doint the same step of point 2

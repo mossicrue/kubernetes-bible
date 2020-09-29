@@ -1,0 +1,28 @@
+### WORKER NODES FAILURE ###
+
+# How to go for a troubleshooting in case of a worker node fail
+
+- Check if a worker node is not Ready by running kubectl get nodes
+- If a worker is not ready check for more details with kubectl describe node <notready-node>
+
+# kubectl describe node <node-name> under conditions there are various flag that show the health of the node
+# Each flag can have 3 values: False, True, Unknown
+- When the node is out of disk space, OutOfDisk flag is set to true
+- When the node is out of memory, MemoryPressure flag is set to true
+- When the disk capacity is low, the DiskPressure flag is set to true
+- When there are too many processes the PID Pressure flag is set to true
+- If the node is set and healty, Ready flag is set to true
+
+# When a worker node stops communicating with the master, due to a crash, these statuses are set to Unknown
+# Unknown can indicate a possible loss of a node, check Heartbeat time field to find out the time when the node might have crashed
+
+# Check on the node itself for a problem
+- Check if it's up and running or kernel panic
+- Check with top if some external process are using too much CPU or Memory
+- Check with df if some filesystems have problem or are full
+
+# Check Kubelet
+- Check kubelet service status if deployed "hard way"
+- Check for its logs
+- Check kubelet certificates, if they are valid or issued by a valid CA
+  * run openssl x509 -in /var/lib/kubelet/worker-1.crt -text

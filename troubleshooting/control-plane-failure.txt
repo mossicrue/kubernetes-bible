@@ -1,0 +1,17 @@
+### CONTROL PLANE FAILURE ###
+
+# How to go for a troubleshooting in case of control plane components fail
+
+# Check Node Status
+- Check if nodes are in STATUS ready by running kubectl get nodes
+- Check the status of pod running on the cluster
+- Check if control plane components pod in kube-system namespace are running (Only if deployed with kubeadm)
+- Check status of the control plane components services (Only if deployed "hard way")
+  * kube-apiserver
+  * kube-controller-manager
+  * kube-scheduler
+  * kubelet
+  * kube-proxy
+- Check logs of the control plane components
+  * run kubectl -n kube-system logs <control-plane-pod> in case of kubeadm cluster
+  * in case of "hard way" cluster use the hosts logging solutions like journalctl -u <control-plane-service>
