@@ -47,8 +47,3 @@ curl http://web-service.apps.svc.cluster.local -> Welcome to NGINX!
 curl http://10-244-2-5.apps.pod.cluster.local -> Welcome to NGINX!
 
 # "test" pod has IP 10.244.1.5, its fqdn would be 10-244-1-5.default.pod.cluster.local
-
-
-
-
-#
