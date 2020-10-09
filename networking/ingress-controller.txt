@@ -173,8 +173,3 @@ metadata:
 - a service account with the right perission to access all of this object
 
 # We should be ready with an ingress controller in its simplest form
-
-
-
-
-#
