@@ -6,7 +6,7 @@
 - The web server then sent a request to the API at port 5000
 - The API server then fetches data from the database server at port 3306 and sends data back
 
-# There are 2 type of traccif: Ingress and Egress
+# There are 2 type of traffic: Ingress and Egress
 # Web server prespective
 - it receives ingress traffic from the users on port 80
 - has egress Traffic to api server on port 500
@@ -90,14 +90,3 @@ kubectl describe netowrkpolicies <policy-name>
 
 # If you create a network policy in a cluster with not supported network you don't get any error
 # simply the rule will not be apply/enforced
-
-
-
-
-
-
-
-
-
-
-#
